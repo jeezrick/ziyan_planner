@@ -24,6 +24,11 @@ public:
     std::shared_ptr<Costmap2D> costmap_2d_ptr
   );
 
+  explicit Costmap2DZiYan(
+    const ZiYan_IO::Info::WeakPtr & parent, 
+    const ZiYan_IO::OccupancyGrid & map
+  );
+
   ~Costmap2DZiYan();
 
   /**
@@ -68,8 +73,7 @@ public:
   std::shared_ptr<InflationLayer> getInflationLayer() {return inflation_layer_ptr_;} 
 
 protected:
-  // Costmap2D costmap2d_;
-  std::shared_ptr<Costmap2D> costmap_2d_ptr_ = std::make_shared<Costmap2D>();
+  std::shared_ptr<Costmap2D> costmap_2d_ptr_ = nullptr;
   std::shared_ptr<InflationLayer> inflation_layer_ptr_ = std::make_shared<InflationLayer>();
 
   std::string global_frame_{1};          ///< The global frame for the costmap

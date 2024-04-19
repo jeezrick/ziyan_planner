@@ -44,13 +44,10 @@ int main() {
         node->occupancymap_params.origin_y, 
         map_i
     );
-    std::shared_ptr<nav2_costmap_2d::Costmap2D> costmap_ptr = std::make_shared<nav2_costmap_2d::Costmap2D>(ins_map);
-    costmap_ptr -> saveMap(configMap["other.map_before_inflation_path"]);
-    // printArr(costmap_ptr->getCharMap(), costmap_ptr->getSizeInCellsX(), costmap_ptr->getSizeInCellsY());
-
     std::shared_ptr<Costmap2DZiYan> costmap_ziyan = std::make_shared<Costmap2DZiYan>(
-        node, costmap_ptr
+        node, ins_map    
     );
+    nav2_costmap_2d::Costmap2D* costmap_ptr = costmap_ziyan->getCostmap();
     costmap_ptr -> saveMap(configMap["other.map_after_inflation_path"]);
 
     PoseStamped start, end;
