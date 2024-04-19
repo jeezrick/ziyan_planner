@@ -1,0 +1,6 @@
+[submodule "thirdparty/eigen3"]
+	path = thirdparty/eigen3
+	url = https://github.com/OPM/eigen3.git
+[submodule "thirdparty/ompl"]
+	path = thirdparty/ompl
+	url = https://github.com/ompl/ompl.git
