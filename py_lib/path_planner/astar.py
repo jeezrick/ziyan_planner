@@ -1,5 +1,5 @@
-from py_lib.aux import *
-from py_lib.logger import Logger
+from path_planner.aux import *
+from path_planner.logger import Logger
 
 import heapq
 import numpy as np
@@ -15,7 +15,7 @@ def h2(a, b):
    return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
 def get_path(map0, start, end, h_multiplier=1.0):
-    logger = Logger("./data/py_node_history.txt")
+    logger = Logger("../data/py_node_history.txt")
     que = []
     cost_so_far = {}
     come_from = {}
