@@ -64,6 +64,12 @@ int main() {
     assert(ref_x_s == start_x && ref_y_s == start_y); 
     assert(ref_x_e == end_x && ref_y_e == end_y);
 
+    std::stringstream ss;
+    ss << "_s(" << start_x << "_" << start_y << ")"
+       << "_e(" << end_x << "_" << end_y << ")"
+       << "_r(" <<node->plannerhybrid_params.minimum_turning_radius << ")";
+    std::string path_suffix = ss.str();
+    std::cout << path_suffix << std::endl;
     // plan astar 2d
     {
         auto planner_2d = std::make_unique<nav2_smac_planner::SmacPlanner2D>();
@@ -90,7 +96,8 @@ int main() {
             out[iidx++] = coord.y;
         }
 
-        saveArray(out, path.path.size() * 2, "./data/out_path_2d.bin");
+        std::string file_name = "./data/out_path_2d" + path_suffix + ".bin";
+        saveArray(out, path.path.size() * 2, file_name);
         delete[] out;
     }
 
@@ -120,7 +127,8 @@ int main() {
                 out[iidx++] = coord.y;
             }
 
-            saveArray(out, path.path.size() * 2, "./data/out_path_hybrid.bin");
+            std::string file_name = "./data/out_path_hybrid" + path_suffix + ".bin";
+            saveArray(out, path.path.size() * 2, file_name);
             delete[] out;
         }
 
@@ -132,7 +140,9 @@ int main() {
                 poseout[iidx++] = pose.pose.position.x;
                 poseout[iidx++] = pose.pose.position.y;
             }
-            saveArray(poseout, path.path.size() * 2, "./data/out_path_hybrid_world.bin");
+
+            std::string file_name = "./data/out_path_hybrid_world" + path_suffix + ".bin";
+            saveArray(poseout, path.path.size() * 2, file_name);
             delete[] poseout;
         }
     }
