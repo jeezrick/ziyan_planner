@@ -15,14 +15,16 @@ namespace ZiYan_IO
     this->origin.position.y = origin_y;
     this->data = data;
 
-    ZIYAN_INFO("Make OccupancyGrid -> width: %d, height: %d, resolution: %.3f, origin_x: %.3f, origin_y: %.3f", 
-      width, height, resolution, origin_x, origin_y);
+    ZIYAN_INFO("Make OccupancyGrid -> "
+      "width: %d, height: %d, resolution: %.3f, origin_x: %.3f, origin_y: %.3f", 
+      width, height, resolution, origin_x, origin_y
+    );
   };
 
   OccupancyGrid::~OccupancyGrid()
   {
     delete[] data;
-    ZIYAN_INFO("[OccupancyGrid] delete data.\n");
+    ZIYAN_INFO("delete data.");
   }
 
   Point & Point::operator=(const Point & other)

@@ -54,7 +54,6 @@ public:
    */
   void configure(
     const ZiYan_IO::Info::WeakPtr & parent,
-    std::string name,
     std::shared_ptr<ZiYan_IO::Costmap2DZiYan> costmap_ziyan) override;
 
   /**
@@ -90,7 +89,6 @@ protected:
   std::unique_ptr<Smoother> _smoother;
   nav2_costmap_2d::Costmap2D * _costmap;
   // std::unique_ptr<CostmapDownsampler> _costmap_downsampler;
-  std::string _global_frame, _name;
 
   float _tolerance;
   bool _downsample_costmap;
@@ -104,8 +102,8 @@ protected:
   SearchInfo _search_info;
   std::string _motion_model_for_search;
   MotionModel _motion_model;
-  std::mutex _mutex;
   ZiYan_IO::Info::WeakPtr _node;
+  std::string _global_frame;
 };
 
 }  // namespace nav2_smac_planner

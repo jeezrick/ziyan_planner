@@ -24,7 +24,6 @@
 #include "ziyan_io/logger.hpp"
 
 #define BENCHMARK_TESTING
-#define PLANNER_HYBRID_DEBUG_ 
 
 namespace nav2_smac_planner
 {
@@ -43,18 +42,14 @@ SmacPlannerHybrid::SmacPlannerHybrid()
 
 SmacPlannerHybrid::~SmacPlannerHybrid()
 {
-  ZIYAN_INFO(
-    "Destroying plugin %s of type SmacPlannerHybrid",
-    _name.c_str());
+  ZIYAN_INFO("Destroying plugin of type SmacPlannerHybrid");
 }
 
 void SmacPlannerHybrid::configure(
   const ZiYan_IO::Info::WeakPtr & parent,
-  std::string name, 
   std::shared_ptr<ZiYan_IO::Costmap2DZiYan> costmap_ziyan) 
 {
   ZIYAN_INFO("Configuring SmacPlannerHybrid");
-  _name = name;
 
   _node = parent;
   auto node = &((parent.lock()) -> plannerhybrid_params);
@@ -202,7 +197,12 @@ void SmacPlannerHybrid::configure(
   //     "planned_footprints", 1);
   // }
 
-  ZIYAN_INFO( "Minimum turning radius: %.2f, _lookup_table_dim: %.2f", _search_info.minimum_turning_radius, _lookup_table_dim);
+  ZIYAN_INFO(
+    "Minimum turning radius: %.2f m , %.2f, _lookup_table_dim: %.2f, _angle_quantizations: %d", 
+    _minimum_turning_radius_global_coords, _search_info.minimum_turning_radius, 
+    _lookup_table_dim, _angle_quantizations
+  );
+
   ZIYAN_INFO(
     "Configured SmacPlannerHybrid with "
     "maximum iterations %i, max on approach iterations %i, and %s. Tolerance %.2f."
@@ -273,10 +273,7 @@ ZiYan_IO::Path SmacPlannerHybrid::createPlan(
   }
   unsigned int orientation_bin_id = static_cast<unsigned int>(floor(orientation_bin));
   _a_star->setStart(mx, my, orientation_bin_id);
-
-  #ifdef PLANNER_HYBRID_DEBUG_
   ZIYAN_INFO("Start: %d, %d, %d", mx, my, orientation_bin_id);
-  #endif
 
   // Set goal point, in A* bin search coordinates
   if (!costmap->worldToMap(goal.pose.position.x, goal.pose.position.y, mx, my)) {
@@ -294,9 +291,7 @@ ZiYan_IO::Path SmacPlannerHybrid::createPlan(
   }
   orientation_bin_id = static_cast<unsigned int>(floor(orientation_bin));
   _a_star->setGoal(mx, my, orientation_bin_id);
-  #ifdef PLANNER_HYBRID_DEBUG_
   ZIYAN_INFO("Goal: %d, %d, %d", mx, my, orientation_bin_id);
-  #endif
 
   // Setup message
   ZiYan_IO::Path plan;
@@ -351,7 +346,6 @@ ZiYan_IO::Path SmacPlannerHybrid::createPlan(
   // Convert to world coordinates
   plan.poses.reserve(path.size());
   plan.path.reserve(path.size());
-  ZIYAN_INFO("path.size(): %d", path.size());
   for (int i = path.size() - 1; i >= 0; --i) {
     ZiYan_IO::Entry map_pos(path[i].x, path[i].y);
     pose.pose = getWorldCoords(path[i].x, path[i].y, costmap);
@@ -402,8 +396,7 @@ ZiYan_IO::Path SmacPlannerHybrid::createPlan(
   double time_remaining = _max_planning_time - static_cast<double>(time_span.count());
 
 #ifdef BENCHMARK_TESTING
-  std::cout << "It took " << time_span.count() * 1000 <<
-    " milliseconds with " << num_iterations << " iterations." << std::endl;
+  ZIYAN_INFO("BENCHMARK_TESTING: It took %f milliseconds with %i iterations.", time_span.count() * 1000, num_iterations);
 #endif
 
   // Smooth plan
@@ -414,8 +407,7 @@ ZiYan_IO::Path SmacPlannerHybrid::createPlan(
 #ifdef BENCHMARK_TESTING
   steady_clock::time_point c = steady_clock::now();
   duration<double> time_span2 = duration_cast<duration<double>>(c - b);
-  std::cout << "It took " << time_span2.count() * 1000 <<
-    " milliseconds to smooth path." << std::endl;
+  ZIYAN_INFO("BENCHMARK_TESTING: It took %f milliseconds to smooth path.", time_span2.count() * 1000);
 #endif
 
   return plan;

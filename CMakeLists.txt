@@ -1,7 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(myprogram)
-
-set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")  # 关闭所有警告信息
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")  # 关闭所有警告信息
@@ -26,10 +24,19 @@ file(GLOB Target_SRCS
 
 option(BUILD_Target "Building Target" ON)
 
+# add_subdirectory(thirdparty/ompl)
+# if(BUILD_Target)
+#     message("Building Target")
+#     add_executable(myprogram main.cpp ${Target_SRCS})
+#     target_link_libraries(myprogram
+#         ompl
+#     )
+# endif()
+
 if(BUILD_Target)
     message("Building Target")
     add_executable(myprogram main.cpp ${Target_SRCS})
     target_link_libraries(myprogram
-        ${PROJECT_SOURCE_DIR}/thirdparty/ompl/build/zzzz/share/libompl.so
+        ${PROJECT_SOURCE_DIR}/thirdparty/ompl/build/src/ompl/libompl.so
     )
-endif()
+endif() 

@@ -92,9 +92,11 @@ Costmap2D::Costmap2D(const ZiYan_IO::OccupancyGrid & map)
     }
   }
 
-  ZIYAN_INFO("Make costmap2d -> size_x: %d, size_y: %d," 
-  "resolution: %.3f, origin_x: %.3f, origin_y: %.3f", 
-  size_x_, size_y_, resolution_, origin_x_, origin_y_);
+  ZIYAN_INFO(
+    "Make costmap2d -> size_x: %d, size_y: %d," 
+    "resolution: %.3f, origin_x: %.3f, origin_y: %.3f", 
+    size_x_, size_y_, resolution_, origin_x_, origin_y_
+  );
 }
 
 void Costmap2D::deleteMaps()

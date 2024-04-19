@@ -39,12 +39,11 @@ SmacPlanner2D::SmacPlanner2D()
 }
 
 SmacPlanner2D::~SmacPlanner2D() {
-  ZIYAN_INFO("Destroying plugin %s of type SmacPlanner2D", _name.c_str());
+  ZIYAN_INFO("Destroying plugin of type SmacPlanner2D");
 }
 
 void SmacPlanner2D::configure(
   const ZiYan_IO::Info::WeakPtr & parent,
-  std::string name,
   std::shared_ptr<ZiYan_IO::Costmap2DZiYan> costmap_ziyan) 
 {
   _node = parent;
@@ -53,10 +52,9 @@ void SmacPlanner2D::configure(
   // _clock = node->get_clock();
 
   _costmap = costmap_ziyan->getCostmap();
-  _name = name;
   _global_frame = costmap_ziyan->getGlobalFrameID();
 
-  ZIYAN_INFO("Configuring %s of type SmacPlanner2D", name.c_str());
+  ZIYAN_INFO("Configuring of type SmacPlanner2D");
 
   // General planner params
   _tolerance = node->planner2d_params.tolerance;
@@ -120,28 +118,28 @@ void SmacPlanner2D::configure(
   // }
 
   ZIYAN_INFO(
-    "Configured plugin %s of type SmacPlanner2D with "
+    "Configured plugin of type SmacPlanner2D with "
     "tolerance %.2f, maximum iterations %i, "
     "downsampling_factor %d, "
     "max on approach iterations %i, and %s.",
-    _name.c_str(), _tolerance, _max_iterations, _downsampling_factor, _max_on_approach_iterations,
+    _tolerance, _max_iterations, _downsampling_factor, _max_on_approach_iterations,
     _allow_unknown ? "allowing unknown traversal" : "not allowing unknown traversal"
   );
 }
 
 void SmacPlanner2D::activate()
 {
-  ZIYAN_INFO("Activating plugin %s of type SmacPlanner2D", _name.c_str());
+  ZIYAN_INFO("Activating plugin of type SmacPlanner2D");
 }
 
 void SmacPlanner2D::deactivate()
 {
-  ZIYAN_INFO("Deactivating plugin %s of type SmacPlanner2D", _name.c_str());
+  ZIYAN_INFO("Deactivating plugin of type SmacPlanner2D");
 }
 
 void SmacPlanner2D::cleanup()
 {
-  ZIYAN_INFO("Cleaning up plugin %s of type SmacPlanner2D", _name.c_str());
+  ZIYAN_INFO("Cleaning up plugin of type SmacPlanner2D");
   _a_star.reset();
   _smoother.reset();
 }
@@ -151,7 +149,6 @@ ZiYan_IO::Path SmacPlanner2D::createPlan(
   const ZiYan_IO::PoseStamped & goal,
   std::function<bool()> cancel_checker)
 {
-  std::lock_guard<std::mutex> lock_reinit(_mutex);
   steady_clock::time_point a = steady_clock::now();
 
   std::unique_lock<nav2_costmap_2d::Costmap2D::mutex_t> lock(*(_costmap->getMutex()));
@@ -175,6 +172,7 @@ ZiYan_IO::Path SmacPlanner2D::createPlan(
       std::to_string(start.pose.position.y) + ") was outside bounds");
   }
   _a_star->setStart(mx_start, my_start, 0);
+  ZIYAN_INFO("Start: %d, %d", mx_start, my_start);
 
   // Set goal point
   if (!costmap->worldToMap(goal.pose.position.x, goal.pose.position.y, mx_goal, my_goal)) 
@@ -184,6 +182,7 @@ ZiYan_IO::Path SmacPlanner2D::createPlan(
       std::to_string(goal.pose.position.y) + ") was outside bounds");
   }
   _a_star->setGoal(mx_goal, my_goal, 0);
+  ZIYAN_INFO("Goal: %d, %d", mx_goal, my_goal);
 
   // Setup message
   ZiYan_IO::Path plan;

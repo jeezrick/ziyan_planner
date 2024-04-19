@@ -55,7 +55,6 @@ public:
    */
   void configure(
     const ZiYan_IO::Info::WeakPtr & parent,
-    std::string name, 
     std::shared_ptr<ZiYan_IO::Costmap2DZiYan> costmap_ziyan) override; 
 
   /**
@@ -93,7 +92,7 @@ protected:
   nav2_costmap_2d::Costmap2D * _costmap;
   std::shared_ptr<ZiYan_IO::Costmap2DZiYan> _costmap_ziyan; 
   std::unique_ptr<CostmapDownsampler> _costmap_downsampler;
-  std::string _global_frame, _name;
+  std::string _global_frame;
   float _lookup_table_dim;
   float _tolerance;
   bool _downsample_costmap;
@@ -112,7 +111,6 @@ protected:
   std::string _motion_model_for_search;
   MotionModel _motion_model;
 
-  // std::mutex _mutex;
   ZiYan_IO::Info::WeakPtr _node;
 };
 

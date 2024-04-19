@@ -45,12 +45,13 @@ int main() {
         map_i
     );
     std::shared_ptr<nav2_costmap_2d::Costmap2D> costmap_ptr = std::make_shared<nav2_costmap_2d::Costmap2D>(ins_map);
-    costmap_ptr -> saveMap("./data/out_before_inflation.pgm");
+    costmap_ptr -> saveMap(configMap["other.map_before_inflation_path"]);
     // printArr(costmap_ptr->getCharMap(), costmap_ptr->getSizeInCellsX(), costmap_ptr->getSizeInCellsY());
 
     std::shared_ptr<Costmap2DZiYan> costmap_ziyan = std::make_shared<Costmap2DZiYan>(
         node, costmap_ptr
     );
+    costmap_ptr -> saveMap(configMap["other.map_after_inflation_path"]);
 
     PoseStamped start, end;
     costmap_ptr->mapToWorld(start_x, start_y, start.pose.position.x, start.pose.position.y);
@@ -62,12 +63,11 @@ int main() {
     
     assert(ref_x_s == start_x && ref_y_s == start_y); 
     assert(ref_x_e == end_x && ref_y_e == end_y);
-    costmap_ptr -> saveMap("./data/out_after_inflation.pgm");
 
     // plan astar 2d
     {
         auto planner_2d = std::make_unique<nav2_smac_planner::SmacPlanner2D>();
-        planner_2d->configure(node, "logger_test", costmap_ziyan);
+        planner_2d->configure(node, costmap_ziyan);
         planner_2d->activate();
 
         auto dummy_cancel_checker = []() {
@@ -86,7 +86,6 @@ int main() {
         unsigned int* out = new unsigned int[path.path.size() * 2];
         int iidx = 0;
         for (const Entry& coord : path.path) {
-            // std::cout << "x: " << coord.x << ", y: " << coord.y << std::endl;
             out[iidx++] = coord.x;
             out[iidx++] = coord.y;
         }
@@ -98,7 +97,7 @@ int main() {
     // plan astar hybrid
     {
         auto planner = std::make_unique<nav2_smac_planner::SmacPlannerHybrid>();
-        planner->configure(node, "logger_test", costmap_ziyan);
+        planner->configure(node, costmap_ziyan);
         planner->activate();
 
         auto dummy_cancel_checker = []() {return false;};
@@ -126,7 +125,6 @@ int main() {
         }
 
         {
-            std::cout << "poses" << std::endl;
             double* poseout = new double[path.path.size() * 2];
             int iidx = 0;
             for (const PoseStamped& pose : path.poses) {

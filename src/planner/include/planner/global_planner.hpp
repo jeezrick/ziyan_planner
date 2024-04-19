@@ -46,7 +46,6 @@ public:
    */
   virtual void configure(
     const ZiYan_IO::Info::WeakPtr & parent,
-    std::string name,
     std::shared_ptr<ZiYan_IO::Costmap2DZiYan> costmap_ziyan) = 0;
 
   /**

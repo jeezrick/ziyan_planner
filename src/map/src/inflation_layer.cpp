@@ -47,7 +47,7 @@
 #include "map/footprint.hpp"
 #include "ziyan_io/logger.hpp"
 
-#define INFLATION_DEBUG
+// #define INFLATION_DEBUG
 
 namespace nav2_costmap_2d
 {
@@ -76,10 +76,8 @@ InflationLayer::~InflationLayer()
 void
 InflationLayer::initialize(
   std::shared_ptr<Costmap2D> costmap_2d_ptr, 
-  std::string name,
   const ZiYan_IO::Info::WeakPtr & nodePtr) 
 {
-  name_ = name;
   costmap_2d_ptr_ = costmap_2d_ptr;
 
   auto node = nodePtr.lock(); // get SharedPtr
@@ -99,9 +97,9 @@ InflationLayer::initialize(
   matchSize();
 
   ZIYAN_INFO(
-    "name: %s, enabled_: %s, inflate_unknown: %s, inflate_around_unknown: %s, "
+    "enabled_: %s, inflate_unknown: %s, inflate_around_unknown: %s, "
     "resolution: %.3f, inflation_radius: %.3f, cell_inflation_radius: %d, cost_scaling_factor: %.3f", 
-    name_.c_str(), enabled_ ? "true" : "false", 
+    enabled_ ? "true" : "false", 
     inflate_unknown_ ? "true" : "false", 
     inflate_around_unknown_ ? "true" : "false", 
     resolution_, inflation_radius_, cell_inflation_radius_, cost_scaling_factor_
@@ -241,9 +239,7 @@ InflationLayer::updateCosts(
   max_i = std::min(static_cast<int>(size_x), max_i);
   max_j = std::min(static_cast<int>(size_y), max_j);
 
-  #ifdef INFLATION_DEBUG
-  ZIYAN_INFO("min_i: %d, min_j: %d, max_i: %d, max_j: %d", min_i, min_j, max_i, max_j);
-  #endif
+  ZIYAN_INFO("Inflation range: min_i: %d, min_j: %d, max_i: %d, max_j: %d", min_i, min_j, max_i, max_j);
 
   // Inflation list; we append cells to visit in a list associated with
   // its distance to the nearest obstacle

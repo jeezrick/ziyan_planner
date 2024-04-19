@@ -28,7 +28,7 @@
 #include "planner/a_star.hpp"
 #include "ziyan_io/logger.hpp"
 
-#define ASTAR_DEBUG_
+// #define ASTAR_DEBUG_
 
 namespace nav2_smac_planner
 {
@@ -381,7 +381,11 @@ bool AStarAlgorithm<NodeT>::createPath(
 
         // 4.3) Add to queue with heuristic cost
         float total_cost = g_cost + getHeuristicCost(neighbor);
-        ZIYAN_INFO("Adding neighbor to queue with cost: %f, g_cost: %f", total_cost, g_cost);
+
+        #ifdef ASTAR_DEBUG_
+        ZIYAN_INFO("Adding neighbor to queue with total cost: %f, accumulated cost: %f", total_cost, g_cost);
+        #endif
+
         addNode(total_cost, neighbor);
       }
     }

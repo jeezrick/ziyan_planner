@@ -32,7 +32,7 @@
 
 using namespace std::chrono;  // NOLINT
 
-#define NODE_HYBRID_DEBUG_
+// #define NODE_HYBRID_DEBUG_
 
 namespace nav2_smac_planner
 {
@@ -90,10 +90,6 @@ void HybridMotionTable::initDubin(
   num_angle_quantization_float = static_cast<float>(num_angle_quantization);
   min_turning_radius = search_info.minimum_turning_radius;
   motion_model = MotionModel::DUBIN;
-
-  #ifdef NODE_HYBRID_DEBUG_
-  ZIYAN_INFO("num_angle_quantization: %d, min_turning_radius: %.2f", num_angle_quantization, min_turning_radius);
-  #endif
 
 
   // angle must meet 3 requirements:
@@ -361,10 +357,12 @@ MotionPoses HybridMotionTable::getProjections(const NodeHybrid * node)
   #ifdef NODE_HYBRID_DEBUG_
   for (unsigned int i = 0; i != projection_list.size(); i++) {
     ZIYAN_INFO(
-      "node_heading: %.2f, x: %.2f, y: %.2f, Projection %d: x: %.2f, y: %.2f, theta: %.2f, turn: %d",
-      node->pose.theta, node->pose.x, node->pose.y, 
+      "x: %.2f, y: %.2f, node_heading: %.2f, "
+      "Projection %d: x: %.2f, y: %.2f, theta: %.2f, turn: %d",
+      node->pose.x, node->pose.y, node->pose.theta, 
       i, projection_list[i]._x, projection_list[i]._y, projection_list[i]._theta,
-      static_cast<int>(projection_list[i]._turn_dir));
+      static_cast<int>(projection_list[i]._turn_dir)
+    );
   } 
   #endif
 
@@ -440,10 +438,11 @@ float NodeHybrid::getTraversalCost(const NodePtr & child)
   const TurnDirection & child_turn_dir = child->getTurnDirection();
   float travel_cost_raw = motion_table.travel_costs[child->getMotionPrimitiveIndex()];
   float travel_cost = 0.0;
-  ZIYAN_INFO(
-    "normalized cost: %.2f, "
-    "travel cost raw: %.2f", 
+
+  #ifdef NODE_HYBRID_DEBUG_
+  ZIYAN_INFO("normalized cost: %.2f, travel cost raw: %.2f", 
     normalized_cost, travel_cost_raw);
+  #endif
 
   if (motion_table.use_quadratic_cost_penalty) {
     travel_cost_raw *=
@@ -476,8 +475,9 @@ float NodeHybrid::getTraversalCost(const NodePtr & child)
     travel_cost *= motion_table.reverse_penalty;
   }
 
-  ZIYAN_INFO(
-    "Traversal cost: %.2f", travel_cost);
+  #ifdef NODE_HYBRID_DEBUG_
+  ZIYAN_INFO("Traversal cost: %.2f", travel_cost);
+  #endif
 
   return travel_cost;
 }
@@ -493,7 +493,11 @@ float NodeHybrid::getHeuristicCost(
   const float obstacle_heuristic =
     getObstacleHeuristic(node_coords, goal_coords, motion_table.cost_penalty);
   const float dist_heuristic = getDistanceHeuristic(node_coords, goal_coords, obstacle_heuristic);
+
+  #ifdef NODE_HYBRID_DEBUG_
   ZIYAN_INFO("obstacle_heuristic: %.2f, dist_heuristic: %.2f", obstacle_heuristic, dist_heuristic);
+  #endif
+
   return std::max(obstacle_heuristic, dist_heuristic);
 }
 
@@ -929,12 +933,19 @@ bool NodeHybrid::backtracePath(CoordinateVector & path)
   }
 
   NodePtr current_node = this;
+
+  #ifdef NODE_HYBRID_DEBUG_
   float total_length;
+  ZIYAN_INFO("Report info about the curve of path:");
+  #endif
 
   while (current_node->parent) {
     path.push_back(current_node->pose);
+
+    #ifdef NODE_HYBRID_DEBUG_
     total_length += motion_table.travel_costs[current_node->getMotionPrimitiveIndex()];
-    std::cout << "current_node->getMotionPrimitiveIndex(): " << current_node->getMotionPrimitiveIndex() << std::endl;
+    ZIYAN_INFO("current_node->getMotionPrimitiveIndex(): %d", current_node->getMotionPrimitiveIndex());
+    #endif
 
     // Convert angle to radians
     path.back().theta = NodeHybrid::motion_table.getAngleFromBin(path.back().theta);
@@ -946,7 +957,10 @@ bool NodeHybrid::backtracePath(CoordinateVector & path)
   // Convert angle to radians
   path.back().theta = NodeHybrid::motion_table.getAngleFromBin(path.back().theta);
 
-  std::cout << "Total length: " << total_length << std::endl;
+  #ifdef NODE_HYBRID_DEBUG_
+  ZIYAN_INFO("Total curve length: %f", total_length);
+  #endif
+
   return true;
 }
 

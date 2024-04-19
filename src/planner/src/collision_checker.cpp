@@ -15,7 +15,7 @@
 #include "planner/collision_checker.hpp"
 #include "ziyan_io/logger.hpp"
 
-#define COLLISION_CHECKER_DEBUG_
+// #define COLLISION_CHECKER_DEBUG_
 
 
 namespace nav2_smac_planner
@@ -37,8 +37,6 @@ GridCollisionChecker::GridCollisionChecker(
   for (unsigned int i = 0; i != num_quantizations; i++) {
     angles_.push_back(bin_size * i);
   }
-
-  ZIYAN_INFO("GridCollisionChecker initialized with %d quantizations", num_quantizations);
 }
 
 void GridCollisionChecker::setFootprint(
@@ -109,8 +107,6 @@ bool GridCollisionChecker::inCollision(
   double wx, wy;
   costmap_->mapToWorld(static_cast<double>(x), static_cast<double>(y), wx, wy);
 
-  ZIYAN_INFO("footprint_is_radius_: %s", footprint_is_radius_ ? "true" : "false")
-
   if (!footprint_is_radius_) {
     // if footprint, then we check for the footprint's points, but first see
     // if the robot is even potentially in an inscribed collision
@@ -169,7 +165,13 @@ bool GridCollisionChecker::inCollision(
     //     static_cast<unsigned int>(x), static_cast<unsigned int>(y)));
 
 
-    ZIYAN_INFO("footprint_cost: %f, INSCRIBED: %f", footprint_cost_, INSCRIBED);
+    #ifdef COLLISION_CHECKER_DEBUG_
+    ZIYAN_INFO("footprint_is_radius_: %s, footprint_cost: %f", 
+      (footprint_is_radius_ ? "true" : "false"),  footprint_cost_
+    );
+    #endif
+
+
     if (footprint_cost_ == UNKNOWN && traverse_unknown) {
       return false;
     }

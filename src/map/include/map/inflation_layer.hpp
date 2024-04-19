@@ -100,7 +100,6 @@ public:
    */
   void initialize(
     std::shared_ptr<Costmap2D> costmap_2d_ptr, 
-    std::string name,
     const ZiYan_IO::Info::WeakPtr & node
   );
 
@@ -310,7 +309,6 @@ protected:
   std::vector<ZiYan_IO::Point> unpadded_footprint_;
   std::vector<ZiYan_IO::Point> padded_footprint_;
   double circumscribed_radius_;
-  std::string name_;
 };
 
 }  // namespace nav2_costmap_2d

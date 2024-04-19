@@ -16,7 +16,7 @@ Costmap2DZiYan::Costmap2DZiYan(
   * a new unsigned char array and copy the value of the right-hand side to the left-hand side.
   */
 
-  inflation_layer_ptr_ -> initialize(costmap_2d_ptr_, "inflation_layer", parent);
+  inflation_layer_ptr_ -> initialize(costmap_2d_ptr_, parent);
   inflation_layer_ptr_ -> onFootprintChanged(node_->inflation_params.radius);
 
   inflation_layer_ptr_ -> updateCosts( 
