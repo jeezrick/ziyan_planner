@@ -34,3 +34,7 @@ add_library(${PROJECT_NAME} SHARED ${LIB_SRCS})
 target_link_libraries(${PROJECT_NAME}
     ${FIND_OMPL_DIR}/ompl/build/src/ompl/libompl.so
 )
+
+# 添加可执行文件 main.cpp
+add_executable(main main.cpp)
+target_link_libraries(main ${PROJECT_NAME})
