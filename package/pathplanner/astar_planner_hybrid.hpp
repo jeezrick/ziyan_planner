@@ -12,7 +12,7 @@
 #include "pathplanner/global_planner.hpp"
 #include "pathplanner/costmap_2d.hpp"
 #include "pathplanner/costmap_manager.hpp"
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 
 
 namespace ziyan_planner
@@ -21,26 +21,32 @@ namespace ziyan_planner
 class AstarPlannerHybrid : public AstarPlanner
 {
 public:
-  AstarPlannerHybrid(const ziyan_planner::Info::WeakPtr & parent);
+  AstarPlannerHybrid(const Info::WeakPtr & parent);
   ~AstarPlannerHybrid() override;
   void setMap(
-    std::shared_ptr<ziyan_costmap::CostmapManager> costmap_ziyan) override; 
+    std::shared_ptr<CostmapManager> costmap_ziyan) override; 
 
   Path createPlan(
     const PoseStamped & start,
     const PoseStamped & goal,
     std::function<bool()> cancel_checker) override;
 
+  Path createPlan(
+    const XYT& start,
+    const XYT& goal,
+    std::function<bool()> cancel_checker) override;
+
   void cleanup() override;
 
 protected:
+
   std::unique_ptr<AStarAlgorithm<NodeHybrid>> _a_star;
-  ziyan_costmap::GridCollisionChecker _collision_checker;
+  GridCollisionChecker _collision_checker;
   std::unique_ptr<Smoother> _smoother;
 
-  ziyan_costmap::Costmap2D * _costmap;
-  std::shared_ptr<ziyan_costmap::CostmapManager> _costmap_ziyan; 
-  std::unique_ptr<ziyan_costmap::CostmapDownsampler> _costmap_downsampler;
+  Costmap2D * _costmap;
+  std::shared_ptr<CostmapManager> _costmap_manager; 
+  std::unique_ptr<CostmapDownsampler> _costmap_downsampler;
   std::string _global_frame;
   float _lookup_table_dim;
   float _tolerance;
@@ -63,7 +69,7 @@ protected:
   std::string _motion_model_for_search;
   MotionModel _motion_model;
 
-  ziyan_planner::Info::WeakPtr _node;
+  Info::WeakPtr _node;
 };
 
 }  

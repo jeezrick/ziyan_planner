@@ -9,7 +9,7 @@
 
 #include "pathplanner/types.hpp"
 #include "pathplanner/costmap_manager.hpp"
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 #include "pathplanner/logger.hpp"
 
 namespace ziyan_planner
@@ -22,10 +22,10 @@ namespace ziyan_planner
 * @param costmap Costmap pointer
 * @return Eigen::Vector2d eigen vector of the generated path
 */
-inline ziyan_planner::Pose getWorldCoords(
-  const float & mx, const float & my, const ziyan_costmap::Costmap2D * costmap)
+inline Pose getWorldCoords(
+  const float & mx, const float & my, const Costmap2D * costmap)
 {
-  ziyan_planner::Pose msg;
+  Pose msg;
   msg.position.x =
     static_cast<float>(costmap->getOriginX()) + (mx + 0.5) * costmap->getResolution();
   msg.position.y =
@@ -38,11 +38,11 @@ inline ziyan_planner::Pose getWorldCoords(
 * @param theta continuous bin coordinates angle
 * @return quaternion orientation in map frame
 */
-inline ziyan_planner::Quaternion getWorldOrientation(
+inline Quaternion getWorldOrientation(
   const float & theta)
 {
   // theta is in radians already
-  ziyan_planner::Quaternion q;
+  Quaternion q;
   q.setEuler(0.0, 0.0, theta);
   return q;
 }
@@ -52,9 +52,9 @@ inline ziyan_planner::Quaternion getWorldOrientation(
  * @param angle Yaw angle to generate a quaternion from
  * @return geometry_msgs Quaternion
  */
-inline ziyan_planner::Quaternion orientationAroundZAxis(double angle)
+inline Quaternion orientationAroundZAxis(double angle)
 {
-  ziyan_planner::Quaternion q;
+  Quaternion q;
   q.setRPY(0, 0, angle);  // void returning function
   return q;
 }
@@ -97,7 +97,7 @@ static inline double shortest_angular_distance(double from, double to)
 * @return double circumscribed cost, any higher than this and need to do full footprint collision checking
 * since some element of the robot could be in collision
 */
-inline double findCircumscribedCost(std::shared_ptr<ziyan_costmap::CostmapManager> costmap)
+inline double findCircumscribedCost(std::shared_ptr<CostmapManager> costmap)
 {
   double result = -1.0;
   // std::vector<std::shared_ptr<nav2_costmap_2d::Layer>>::iterator layer;

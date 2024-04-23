@@ -1,5 +1,5 @@
-#ifndef ZIYAN_COSTMAP__INFLATION_LAYER_HPP_
-#define ZIYAN_COSTMAP__INFLATION_LAYER_HPP_
+#ifndef ZIYAN_PLANNER__INFLATION_LAYER_HPP_
+#define ZIYAN_PLANNER__INFLATION_LAYER_HPP_
 
 #include <map>
 #include <vector>
@@ -8,11 +8,12 @@
 #include <stdexcept>
 
 #include "pathplanner/costmap_2d.hpp"
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 
 
-namespace ziyan_costmap
+namespace ziyan_planner
 {
+ 
 /**
  * @class CellData
  * @brief Storage for cell information used during obstacle inflation
@@ -61,7 +62,7 @@ public:
    */
   void initialize(
     std::shared_ptr<Costmap2D> costmap_2d_ptr, 
-    const ziyan_planner::Info::WeakPtr & node
+    const Info::WeakPtr & node
   );
 
   /**
@@ -114,9 +115,9 @@ public:
   /** @brief  Given a distance, compute a cost.
    * @param  distance The distance from an obstacle in cells
    * @return A cost value for the distance */
-  inline unsigned char computeCost(double distance) const
+  inline uint8_t computeCost(double distance) const
   {
-    unsigned char cost = 0;
+    uint8_t cost = 0;
     if (distance == 0) {
       cost = LETHAL_OBSTACLE;
     } else if (distance * resolution_ <= inscribed_radius_) {
@@ -125,7 +126,7 @@ public:
       // make sure cost falls off by Euclidean distance
       double factor =
         exp(-1.0 * cost_scaling_factor_ * (distance * resolution_ - inscribed_radius_));
-      cost = static_cast<unsigned char>((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
+      cost = static_cast<uint8_t>((INSCRIBED_INFLATED_OBSTACLE - 1) * factor);
     }
     return cost;
   }
@@ -150,14 +151,13 @@ public:
     return circumscribed_radius_;
   }
 
-
   /**
    * @brief Process updates on footprint changes to the inflation layer
    */
   // void onFootprintChanged();
   void onFootprintChanged(double robot_radius);
 
-  std::vector<ziyan_planner::Point> getRobotFootprint()
+  std::vector<Point> getRobotFootprint()
   {
     if (!set_up_footprint_) 
       throw std::runtime_error("Footprint not set up yet");
@@ -203,7 +203,7 @@ protected:
    * @param src_y The y coordinate of the source cell
    * @return
    */
-  inline unsigned char costLookup(
+  inline uint8_t costLookup(
     unsigned int mx, unsigned int my, unsigned int src_x,
     unsigned int src_y)
   {
@@ -237,7 +237,7 @@ protected:
     unsigned int index, unsigned int mx, unsigned int my,
     unsigned int src_x, unsigned int src_y);
 
-  double inflation_radius_, inscribed_radius_, cost_scaling_factor_;
+  double inflation_radius_, cost_scaling_factor_;
   bool inflate_unknown_, inflate_around_unknown_;
   float footprint_padding_{0};
 
@@ -249,7 +249,7 @@ protected:
 
   std::vector<bool> seen_;
 
-  std::vector<unsigned char> cached_costs_;
+  std::vector<uint8_t> cached_costs_;
   std::vector<double> cached_distances_;
   std::vector<std::vector<int>> distance_matrix_;
   unsigned int cache_length_;
@@ -267,11 +267,11 @@ protected:
   // Derived parameters
   bool use_radius_{true};
   bool set_up_footprint_{false};
-  std::vector<ziyan_planner::Point> unpadded_footprint_;
-  std::vector<ziyan_planner::Point> padded_footprint_;
-  double circumscribed_radius_;
+  std::vector<Point> unpadded_footprint_;
+  std::vector<Point> padded_footprint_;
+  double inscribed_radius_, circumscribed_radius_;
 };
 
 }  
 
-#endif // ZIYAN_COSTMAP__INFLATION_LAYER_HPP_ 
+#endif // ZIYAN_PLANNER__INFLATION_LAYER_HPP_ 

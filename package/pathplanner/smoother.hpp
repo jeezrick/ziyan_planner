@@ -12,7 +12,7 @@
 #include "pathplanner/types.hpp"
 #include "pathplanner/constants.hpp"
 #include "pathplanner/utils.hpp"
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 
 namespace ziyan_planner
 {
@@ -59,8 +59,8 @@ struct BoundaryExpansion
 };
 
 typedef std::vector<BoundaryExpansion> BoundaryExpansions;
-typedef std::vector<ziyan_planner::PoseStamped>::iterator PathIterator;
-typedef std::vector<ziyan_planner::PoseStamped>::reverse_iterator ReversePathIterator;
+typedef std::vector<PoseStamped>::iterator PathIterator;
+typedef std::vector<PoseStamped>::reverse_iterator ReversePathIterator;
 
 /**
  * @class nav2_smac_planner::Smoother
@@ -96,7 +96,7 @@ public:
    */
   bool smooth(
     Path & path,
-    const ziyan_costmap::Costmap2D * costmap,
+    const Costmap2D * costmap,
     const double & max_time);
 
 protected:
@@ -109,9 +109,9 @@ protected:
    * @return If smoothing was successful
    */
   bool smoothImpl(
-    ziyan_planner::Path & path,
+    Path & path,
     bool & reversing_segment,
-    const ziyan_costmap::Costmap2D * costmap,
+    const Costmap2D * costmap,
     const double & max_time);
 
   /**
@@ -121,7 +121,7 @@ protected:
    * @return dim value
    */
   inline double getFieldByDim(
-    const ziyan_planner::PoseStamped & msg,
+    const PoseStamped & msg,
     const unsigned int & dim);
 
   /**
@@ -131,7 +131,7 @@ protected:
    * @param value to set the dimention to for the pose
    */
   inline void setFieldByDim(
-    ziyan_planner::PoseStamped & msg, const unsigned int dim,
+    PoseStamped & msg, const unsigned int dim,
     const double & value);
 
   /**
@@ -140,7 +140,7 @@ protected:
    * @param path Path in which to look for cusps
    * @return Set of index pairs for each segment of the path in a given direction
    */
-  std::vector<PathSegment> findDirectionalPathSegments(const ziyan_planner::Path & path);
+  std::vector<PathSegment> findDirectionalPathSegments(const Path & path);
 
   /**
    * @brief Enforced minimum curvature boundary conditions on plan output
@@ -151,9 +151,9 @@ protected:
    * @param reversing_segment Whether this path segment is in reverse
    */
   void enforceStartBoundaryConditions(
-    const ziyan_planner::Pose & start_pose,
-    ziyan_planner::Path & path,
-    const ziyan_costmap::Costmap2D * costmap,
+    const Pose & start_pose,
+    Path & path,
+    const Costmap2D * costmap,
     const bool & reversing_segment);
 
   /**
@@ -165,9 +165,9 @@ protected:
    * @param reversing_segment Whether this path segment is in reverse
    */
   void enforceEndBoundaryConditions(
-    const ziyan_planner::Pose & end_pose,
-    ziyan_planner::Path & path,
-    const ziyan_costmap::Costmap2D * costmap,
+    const Pose & end_pose,
+    Path & path,
+    const Costmap2D * costmap,
     const bool & reversing_segment);
 
   /**
@@ -189,10 +189,10 @@ protected:
    * @param reversing_segment Whether this path segment is in reverse
    */
   void findBoundaryExpansion(
-    const ziyan_planner::Pose & start,
-    const ziyan_planner::Pose & end,
+    const Pose & start,
+    const Pose & end,
     BoundaryExpansion & expansion,
-    const ziyan_costmap::Costmap2D * costmap);
+    const Costmap2D * costmap);
 
   /**
    * @brief Generates boundary expansions with end idx at least strategic

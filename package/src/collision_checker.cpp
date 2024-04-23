@@ -3,7 +3,7 @@
 
 // #define COLLISION_CHECKER_DEBUG_
 
-namespace ziyan_costmap
+namespace ziyan_planner
 {
 
 GridCollisionChecker::GridCollisionChecker(
@@ -74,12 +74,12 @@ bool GridCollisionChecker::inCollision(
     );
     #endif
 
-    if (footprint_cost_ == ziyan_costmap::f_UNKNOWN && traverse_unknown) {
+    if (footprint_cost_ == f_UNKNOWN && traverse_unknown) {
       return false;
     }
 
     // if occupied or unknown and not to traverse unknown space
-    return footprint_cost_ >= ziyan_costmap::f_INSCRIBED;
+    return footprint_cost_ >= f_INSCRIBED;
   }
 }
 
@@ -88,12 +88,12 @@ bool GridCollisionChecker::inCollision(
   const bool & traverse_unknown)
 {
   footprint_cost_ = costmap_ptr_->getCost(i);
-  if (footprint_cost_ == ziyan_costmap::f_UNKNOWN && traverse_unknown) {
+  if (footprint_cost_ == f_UNKNOWN && traverse_unknown) {
     return false;
   }
 
   // if occupied or unknown and not to traverse unknown space
-  return footprint_cost_ >= ziyan_costmap::f_INSCRIBED;
+  return footprint_cost_ >= f_INSCRIBED;
 }
 
 float GridCollisionChecker::getCost()
@@ -107,4 +107,4 @@ bool GridCollisionChecker::outsideRange(const unsigned int & max, const float & 
   return value < 0.0f || value > max;
 }
 
-} // namespace ziyan_costmap
+} 

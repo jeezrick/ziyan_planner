@@ -27,11 +27,12 @@ double NodeHybrid::travel_distance_cost = sqrt(2);
 HybridMotionTable NodeHybrid::motion_table;
 float NodeHybrid::size_lookup = 25;
 LookupTable NodeHybrid::dist_heuristic_lookup_table;
-ziyan_costmap::Costmap2D * NodeHybrid::sampled_costmap = nullptr;
-std::shared_ptr<ziyan_costmap::CostmapManager> NodeHybrid::costmap_ziyan = nullptr;
-std::shared_ptr<ziyan_costmap::InflationLayer> NodeHybrid::inflation_layer = nullptr;
 
-ziyan_costmap::CostmapDownsampler NodeHybrid::downsampler;
+Costmap2D * NodeHybrid::sampled_costmap = nullptr;
+std::shared_ptr<CostmapManager> NodeHybrid::costmap_ziyan = nullptr;
+std::shared_ptr<InflationLayer> NodeHybrid::inflation_layer = nullptr;
+
+CostmapDownsampler NodeHybrid::downsampler;
 ObstacleHeuristicQueue NodeHybrid::obstacle_heuristic_queue;
 
 // Each of these tables are the projected motion models through
@@ -393,7 +394,7 @@ void NodeHybrid::reset()
 
 bool NodeHybrid::isNodeValid(
   const bool & traverse_unknown,
-  ziyan_costmap::GridCollisionChecker * collision_checker)
+  GridCollisionChecker * collision_checker)
 {
   if (collision_checker->inCollision(
       this->pose.x, this->pose.y, this->pose.theta /*bin number*/, traverse_unknown))
@@ -520,7 +521,7 @@ inline float distanceHeuristic2D(
 }
 
 void NodeHybrid::resetObstacleHeuristic(
-  std::shared_ptr<ziyan_costmap::CostmapManager> costmap_ziyan_i,
+  std::shared_ptr<CostmapManager> costmap_ziyan_i,
   const unsigned int & start_x, const unsigned int & start_y,
   const unsigned int & goal_x, const unsigned int & goal_y)
 {
@@ -532,7 +533,7 @@ void NodeHybrid::resetObstacleHeuristic(
   inflation_layer = costmap_ziyan->getInflationLayer();
   sampled_costmap = costmap_ziyan->getCostmapPtr();
   if (motion_table.downsample_obstacle_heuristic) {
-    ziyan_planner::Info::WeakPtr ptr;
+    Info::WeakPtr ptr;
     downsampler.on_configure(ptr, "fake_frame", "fake_topic", sampled_costmap, 2.0, true);
     sampled_costmap = downsampler.downsample(2.0);
   }
@@ -682,10 +683,10 @@ float NodeHybrid::getObstacleHeuristic(
         if (!is_circular) {
           // Adjust cost value if using SE2 footprint checks
           cost = adjustedFootprintCost(cost);
-          if (cost >= ziyan_costmap::f_OCCUPIED) {
+          if (cost >= f_OCCUPIED) {
             continue;
           }
-        } else if (cost >= ziyan_costmap::f_INSCRIBED) {
+        } else if (cost >= f_INSCRIBED) {
           continue;
         }
 
@@ -727,23 +728,6 @@ float NodeHybrid::getObstacleHeuristic(
       break;
     }
   }
-
-  // #include "nav_msgs/msg/occupancy_grid.hpp"
-  // static auto node = std::make_shared<rclcpp::Node>("test");
-  // static auto pub = node->create_publisher<nav_msgs::msg::OccupancyGrid>("test", 1);
-  // nav_msgs::msg::OccupancyGrid msg;
-  // msg.info.height = size_y;
-  // msg.info.width = size_x;
-  // msg.info.origin.position.x = -33.6;
-  // msg.info.origin.position.y = -26;
-  // msg.info.resolution = 0.05;
-  // msg.header.frame_id = "map";
-  // msg.header.stamp = node->now();
-  // msg.data.resize(size_x * size_y, 0);
-  // for (unsigned int i = 0; i != size_y * size_x; i++) {
-  //   msg.data.at(i) = obstacle_heuristic_lookup_table[i] / 10.0;
-  // }
-  // pub->publish(std::move(msg));
 
   // return requested_node_cost which has been updated by the search
   // costs are doubled due to downsampling
@@ -870,7 +854,7 @@ void NodeHybrid::precomputeDistanceHeuristic(
 
 void NodeHybrid::getNeighbors(
   std::function<bool(const unsigned int &, NodeHybrid * &)> & NeighborGetter,
-  ziyan_costmap::GridCollisionChecker * collision_checker,
+  GridCollisionChecker * collision_checker,
   const bool & traverse_unknown,
   NodeVector & neighbors)
 {

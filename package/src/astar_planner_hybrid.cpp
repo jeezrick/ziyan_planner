@@ -7,7 +7,7 @@
 
 #include "Eigen/Core"
 
-#include "pathplanner/smac_planner_hybrid.hpp"
+#include "pathplanner/astar_planner_hybrid.hpp"
 #include "pathplanner/logger.hpp"
 
 #define BENCHMARK_TESTING
@@ -24,7 +24,7 @@ _collision_checker(nullptr, 1),
 _smoother(nullptr),
 _costmap(nullptr),
 // _costmap_downsampler(nullptr)
-_costmap_ziyan(nullptr)
+_costmap_manager(nullptr)
 {
   _node = parent;
   auto node = &((parent.lock()) -> plannerhybrid_params);
@@ -109,13 +109,12 @@ AstarPlannerHybrid::~AstarPlannerHybrid()
 }
 
 void AstarPlannerHybrid::setMap(
-  std::shared_ptr<ziyan_costmap::CostmapManager> costmap_ziyan) 
+  std::shared_ptr<CostmapManager> costmap_manager) 
 {
   ZIYAN_INFO("Configuring AstarPlannerHybrid");
 
-  _costmap = costmap_ziyan->getCostmapPtr();
-  _costmap_ziyan = costmap_ziyan;
-  _global_frame = _costmap_ziyan->getGlobalFrameID();
+  _costmap = costmap_manager->getCostmapPtr();
+  _costmap_manager = costmap_manager;
 
   _search_info.analytic_expansion_max_length =
     analytic_expansion_max_length_m / _costmap->getResolution();
@@ -148,11 +147,11 @@ void AstarPlannerHybrid::setMap(
   }
 
   // Initialize collision checker
-  _collision_checker = ziyan_costmap::GridCollisionChecker(_costmap_ziyan, _angle_quantizations);
+  _collision_checker = GridCollisionChecker(_costmap_manager, _angle_quantizations);
   _collision_checker.setFootprint(
-    _costmap_ziyan->getRobotFootprint(),
-    _costmap_ziyan->getUseRadius(),
-    findCircumscribedCost(_costmap_ziyan)
+    _costmap_manager->getRobotFootprint(),
+    _costmap_manager->getUseRadius(),
+    findCircumscribedCost(_costmap_manager)
   );
 
   // Initialize A* template
@@ -210,10 +209,8 @@ Path AstarPlannerHybrid::createPlan(
   const PoseStamped & goal,
   std::function<bool()> cancel_checker)
 {
-  steady_clock::time_point a = steady_clock::now();
-
   // Downsample costmap, if required
-  ziyan_costmap::Costmap2D * costmap = _costmap;
+  Costmap2D * costmap = _costmap;
   // if (_costmap_downsampler) {
   //   costmap = _costmap_downsampler->downsample(_downsampling_factor);
   //   _collision_checker.setCostmap(costmap);
@@ -221,9 +218,9 @@ Path AstarPlannerHybrid::createPlan(
 
   // Set collision checker and costmap information
   _collision_checker.setFootprint(
-    _costmap_ziyan->getRobotFootprint(),
-    _costmap_ziyan->getUseRadius(),
-    findCircumscribedCost(_costmap_ziyan));
+    _costmap_manager->getRobotFootprint(),
+    _costmap_manager->getUseRadius(),
+    findCircumscribedCost(_costmap_manager));
   _a_star->setCollisionChecker(&_collision_checker);
 
 
@@ -266,12 +263,11 @@ Path AstarPlannerHybrid::createPlan(
   _a_star->setGoal(mx, my, orientation_bin_id);
   ZIYAN_INFO("Goal: %d, %d, %d", mx, my, orientation_bin_id);
 
+  steady_clock::time_point a = steady_clock::now();
+
   // Setup message
   Path plan;
-  plan.header.stamp = 1; // TODO
-  plan.header.frame_id = _global_frame;
   PoseStamped pose;
-  pose.header = plan.header;
 
   // Compute plan
   NodeHybrid::CoordinateVector path;
@@ -318,12 +314,11 @@ Path AstarPlannerHybrid::createPlan(
 
   // Convert to world coordinates
   plan.poses.reserve(path.size());
-  plan.path.reserve(path.size());
+  plan.xyt_vec.reserve(path.size());
   for (int i = path.size() - 1; i >= 0; --i) {
-    Entry map_pos(path[i].x, path[i].y);
     pose.pose = getWorldCoords(path[i].x, path[i].y, costmap);
-    plan.path.push_back(map_pos);
     plan.poses.push_back(pose);
+    plan.xyt_vec.push_back(XYT{path[i].x, path[i].y, path[i].theta});
   }
 
   // Publish raw path for debug
@@ -384,6 +379,21 @@ Path AstarPlannerHybrid::createPlan(
 #endif
 
   return plan;
+}
+
+Path AstarPlannerHybrid::createPlan(
+  const XYT & start,
+  const XYT & goal,
+  std::function<bool()> cancel_checker)
+{
+  PoseStamped start_pose, goal_pose;
+  start_pose.pose.position.x = start.x;
+  start_pose.pose.position.y = start.y;
+  start_pose.pose.orientation = yawToQuaternion(start.t);
+  goal_pose.pose.position.x = goal.x;
+  goal_pose.pose.position.y = goal.y;
+  goal_pose.pose.orientation = yawToQuaternion(goal.t);
+  return createPlan(start_pose, goal_pose, cancel_checker);
 }
 
 }

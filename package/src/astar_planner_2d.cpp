@@ -5,8 +5,9 @@
 #include <algorithm>
 #include <stdexcept>
 #include <assert.h>
+#include <chrono>
 
-#include "pathplanner/smac_planner_2d.hpp"
+#include "pathplanner/astar_planner_2d.hpp"
 #include "pathplanner/logger.hpp"
 
 
@@ -18,7 +19,7 @@ namespace ziyan_planner
 using namespace std::chrono;  // NOLINT
 
 AstarPlanner2D::AstarPlanner2D(
-  const ziyan_planner::Info::WeakPtr & parent) : AstarPlanner(parent), 
+  const Info::WeakPtr & parent) : AstarPlanner(parent), 
 _a_star(nullptr),
 _collision_checker(nullptr, 1),
 _smoother(nullptr),
@@ -81,15 +82,14 @@ AstarPlanner2D::~AstarPlanner2D() {
 }
 
 void AstarPlanner2D::setMap(
-  std::shared_ptr<ziyan_costmap::CostmapManager> costmap_ziyan) 
+  std::shared_ptr<CostmapManager> costmap_manager) 
 {
-  _costmap = costmap_ziyan->getCostmapPtr();
-  _global_frame = costmap_ziyan->getGlobalFrameID();
+  _costmap = costmap_manager->getCostmapPtr();
 
   // Initialize collision checker
-  _collision_checker = ziyan_costmap::GridCollisionChecker(costmap_ziyan, 1 /*for 2D, most be 1*/);
+  _collision_checker = GridCollisionChecker(costmap_manager, 1 /*for 2D, most be 1*/);
   _collision_checker.setFootprint(
-    costmap_ziyan->getRobotFootprint(),
+    costmap_manager->getRobotFootprint(),
     true /*for 2D, most use radius*/,
     0.0 /*for 2D cost at inscribed isn't relevent*/
   );
@@ -120,6 +120,21 @@ void AstarPlanner2D::cleanup()
 }
 
 Path AstarPlanner2D::createPlan(
+  const XYT & start,
+  const XYT & goal,
+  std::function<bool()> cancel_checker)
+{
+  PoseStamped start_pose, goal_pose;
+  start_pose.pose.position.x = start.x;
+  start_pose.pose.position.y = start.y;
+  start_pose.pose.orientation = yawToQuaternion(start.t);
+  goal_pose.pose.position.x = goal.x;
+  goal_pose.pose.position.y = goal.y;
+  goal_pose.pose.orientation = yawToQuaternion(goal.t);
+  return createPlan(start_pose, goal_pose, cancel_checker);
+}
+
+Path AstarPlanner2D::createPlan(
   const ziyan_planner::PoseStamped & start,
   const ziyan_planner::PoseStamped & goal,
   std::function<bool()> cancel_checker)
@@ -127,7 +142,7 @@ Path AstarPlanner2D::createPlan(
   steady_clock::time_point a = steady_clock::now();
 
   // Downsample costmap, if required
-  ziyan_costmap::Costmap2D* costmap = _costmap;
+  Costmap2D* costmap = _costmap;
   // if (_costmap_downsampler) {
   //   costmap = _costmap_downsampler->downsample(_downsampling_factor);
   //   _collision_checker.setCostmap(costmap);
@@ -138,43 +153,16 @@ Path AstarPlanner2D::createPlan(
 
   // Set starting point
   unsigned int mx_start, my_start, mx_goal, my_goal;
-  if (!costmap->worldToMap(start.pose.position.x, start.pose.position.y, mx_start, my_start)) 
-  {
-    throw std::runtime_error(
-      "Start Coordinates of(" + std::to_string(start.pose.position.x) + ", " +
-      std::to_string(start.pose.position.y) + ") was outside bounds");
-  }
-  _a_star->setStart(mx_start, my_start, 0);
-  ZIYAN_INFO("Start: %d, %d", mx_start, my_start);
-
-  // Set goal point
-  if (!costmap->worldToMap(goal.pose.position.x, goal.pose.position.y, mx_goal, my_goal)) 
-  {
-    throw std::runtime_error(
-      "Goal Coordinates of(" + std::to_string(goal.pose.position.x) + ", " +
-      std::to_string(goal.pose.position.y) + ") was outside bounds");
-  }
-  _a_star->setGoal(mx_goal, my_goal, 0);
-  ZIYAN_INFO("Goal: %d, %d", mx_goal, my_goal);
+  setStartFrom(mx_start, my_start, start, costmap);
+  setGoalFrom(mx_goal, my_goal, goal, costmap);
 
   // Setup message
   Path plan;
-  plan.header.stamp = 1; // todo
-  plan.header.frame_id = _global_frame;
   PoseStamped pose;
-  pose.header = plan.header;
 
   // Corner case of start and goal beeing on the same cell
   if (mx_start == mx_goal && my_start == my_goal) {
-    pose.pose = start.pose;
-    // if we have a different start and goal orientation, set the unique path pose to the goal
-    // orientation, unless use_final_approach_orientation=true where we need it to be the start
-    // orientation to avoid movement from the local planner
-    if (start.pose.orientation != goal.pose.orientation && !_use_final_approach_orientation) {
-      pose.pose.orientation = goal.pose.orientation;
-    }
-    plan.poses.push_back(pose);
-    return plan;
+    return setPathWithStartOrGoal(start, goal, _use_final_approach_orientation);
   }
 
   // Compute plan
@@ -201,12 +189,11 @@ Path AstarPlanner2D::createPlan(
 
   // Convert to world coordinates
   plan.poses.reserve(path.size());
-  plan.path.reserve(path.size());
+  plan.xyt_vec.reserve(path.size());
   for (int i = path.size() - 1; i >= 0; --i) {
-    Entry map_pos(path[i].x, path[i].y);
     pose.pose = getWorldCoords(path[i].x, path[i].y, costmap);
-    plan.path.push_back(map_pos);
     plan.poses.push_back(pose);
+    plan.xyt_vec.push_back(XYT(path[i].x, path[i].y, 0.0));
   }
 
   // Find how much time we have left to do smoothing
@@ -246,4 +233,111 @@ Path AstarPlanner2D::createPlan(
   return plan;
 }
 
+void AstarPlanner2D::setStartFrom(
+  unsigned int & mx, unsigned int & my, const XYT & start, Costmap2D* costmap)
+{
+  if (!costmap->worldToMap(start.x, start.y, mx, my)) 
+  {
+    throw std::runtime_error(
+      "Start Coordinates of(" + std::to_string(start.x) + ", " +
+      std::to_string(start.y) + ") was outside bounds");
+  }
+  _a_star->setStart(mx, my, 0);
+  ZIYAN_INFO("Start: %d, %d", mx, my);
+}
+
+void AstarPlanner2D::setGoalFrom(
+  unsigned int & mx, unsigned int & my, const XYT & goal, Costmap2D* costmap)
+{
+  if (!costmap->worldToMap(goal.x, goal.y, mx, my)) 
+  {
+    throw std::runtime_error(
+      "Start Coordinates of(" + std::to_string(goal.x) + ", " +
+      std::to_string(goal.y) + ") was outside bounds");
+  }
+  _a_star->setStart(mx, my, 0);
+  ZIYAN_INFO("Start: %d, %d", mx, my);
+}
+
+void AstarPlanner2D::setStartFrom(
+  unsigned int & mx, unsigned int & my, const PoseStamped & start, Costmap2D* costmap)
+{
+  // Set starting point
+  if (!costmap->worldToMap(start.pose.position.x, start.pose.position.y, mx, my)) 
+  {
+    throw std::runtime_error(
+      "Start Coordinates of(" + std::to_string(start.pose.position.x) + ", " +
+      std::to_string(start.pose.position.y) + ") was outside bounds");
+  }
+  _a_star->setStart(mx, my, 0);
+  ZIYAN_INFO("Start: %d, %d", mx, my);
 }  
+
+void AstarPlanner2D::setGoalFrom(
+  unsigned int & mx, unsigned int & my, const PoseStamped & goal, Costmap2D* costmap)
+{
+  // Set goal point
+  if (!costmap->worldToMap(goal.pose.position.x, goal.pose.position.y, mx, my)) 
+  {
+    throw std::runtime_error(
+      "Goal Coordinates of(" + std::to_string(goal.pose.position.x) + ", " +
+      std::to_string(goal.pose.position.y) + ") was outside bounds");
+  }
+  _a_star->setGoal(mx, my, 0);
+  ZIYAN_INFO("Goal: %d, %d", mx, my);
+}
+
+Path AstarPlanner2D::setPathWithStartOrGoal(
+  const XYT & start, const XYT & goal, bool use_final_approach_orientation)
+{
+  Path path;
+  PoseStamped pose;
+  if (use_final_approach_orientation) {
+    pose.pose.position.x = start.x;
+    pose.pose.position.y = start.y;
+    pose.pose.orientation = yawToQuaternion(start.t);
+
+    path.xyt_vec.push_back(start);
+    path.poses.push_back(pose);
+
+  } else {
+    pose.pose.position.x = goal.x;
+    pose.pose.position.y = goal.y;
+    pose.pose.orientation = yawToQuaternion(goal.t);
+
+    path.xyt_vec.push_back(goal);
+    path.poses.push_back(pose);
+  }
+
+  return path;
+}
+
+Path AstarPlanner2D::setPathWithStartOrGoal(
+  const PoseStamped & start, const PoseStamped & goal, bool use_final_approach_orientation)
+{
+  Path path;
+  XYT xyt;
+  if (use_final_approach_orientation) {
+    xyt.x = start.pose.position.x;
+    xyt.y = start.pose.position.y;
+    xyt.t = getYaw(start.pose.orientation);
+
+    path.xyt_vec.push_back(xyt);
+    path.poses.push_back(start);
+
+  } else {
+    xyt.x = goal.pose.position.x;
+    xyt.y = goal.pose.position.y;
+    xyt.t = getYaw(goal.pose.orientation);
+
+    path.xyt_vec.push_back(xyt);
+    path.poses.push_back(goal);
+
+
+  }
+
+  return path;
+}
+
+}
+

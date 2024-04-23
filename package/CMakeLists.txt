@@ -10,10 +10,13 @@ set(PLANNER_SOURCES_DIR ${FIND_DIR}/package/src)
 message(${FIND_DIR})
 message(${PLANNER_SOURCES_DIR})
 
+find_package(Eigen3 3.1.0 REQUIRED)
+
 include_directories(
     ${FIND_DIR}/package
     ${FIND_DIR}/package/pathplanner
-    ${FIND_DIR}/thirdparty/eigen3
+    # ${FIND_DIR}/thirdparty/eigen3
+    ${EIGEN3_INCLUDE_DIR}
     ${FIND_DIR}/thirdparty/ompl/src
 )
 

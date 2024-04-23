@@ -27,7 +27,7 @@ AnalyticExpansion<NodeT>::AnalyticExpansion(
 
 template<typename NodeT>
 void AnalyticExpansion<NodeT>::setCollisionChecker(
-  ziyan_costmap::GridCollisionChecker * collision_checker)
+  GridCollisionChecker * collision_checker)
 {
   _collision_checker = collision_checker;
 }
@@ -353,4 +353,4 @@ template class AnalyticExpansion<Node2D>;
 template class AnalyticExpansion<NodeHybrid>;
 // template class AnalyticExpansion<NodeLattice>;
 
-}  // namespace nav2_smac_planner
+}  

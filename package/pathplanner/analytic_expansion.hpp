@@ -60,7 +60,7 @@ public:
    * @brief Sets the collision checker and costmap to use in expansion validation
    * @param collision_checker Collision checker to use
    */
-  void setCollisionChecker(ziyan_costmap::GridCollisionChecker * collision_checker);
+  void setCollisionChecker(GridCollisionChecker * collision_checker);
 
   /**
    * @brief Attempt an analytic path completion
@@ -112,7 +112,7 @@ protected:
   SearchInfo _search_info;
   bool _traverse_unknown;
   unsigned int _dim_3_size;
-  ziyan_costmap::GridCollisionChecker * _collision_checker;
+  GridCollisionChecker * _collision_checker;
   std::list<std::unique_ptr<NodeT>> _detached_nodes;
 };
 

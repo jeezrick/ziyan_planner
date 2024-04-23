@@ -97,7 +97,7 @@ public:
    * @brief Sets the collision checker to use
    * @param collision_checker Collision checker to use for checking state validity
    */
-  void setCollisionChecker(ziyan_costmap::GridCollisionChecker * collision_checker);
+  void setCollisionChecker(GridCollisionChecker * collision_checker);
 
   /**
    * @brief Set the goal for planning, as a node index
@@ -254,8 +254,8 @@ protected:
   MotionModel _motion_model;
   NodeHeuristicPair _best_heuristic_node;
 
-  ziyan_costmap::GridCollisionChecker * _collision_checker;
-  ziyan_costmap::Costmap2D * _costmap;
+  GridCollisionChecker * _collision_checker;
+  Costmap2D * _costmap;
   std::unique_ptr<AnalyticExpansion<NodeT>> _expander;
 };
 

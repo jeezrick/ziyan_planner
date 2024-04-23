@@ -4,7 +4,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <mutex>
 
 #include "pathplanner/global_planner.hpp"
 #include "pathplanner/a_star.hpp"
@@ -13,7 +12,7 @@
 #include "pathplanner/costmap_downsampler.hpp"
 #include "pathplanner/costmap_2d.hpp"
 #include "pathplanner/costmap_manager.hpp"
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 
 
 namespace ziyan_planner
@@ -22,24 +21,43 @@ namespace ziyan_planner
 class AstarPlanner2D : public AstarPlanner
 {
 public:
-  AstarPlanner2D(const ziyan_planner::Info::WeakPtr & parent);
+  AstarPlanner2D(const Info::WeakPtr & parent);
 
   ~AstarPlanner2D() override;
 
-  void setMap(std::shared_ptr<ziyan_costmap::CostmapManager> costmap_ziyan) override;
+  void setMap(std::shared_ptr<CostmapManager> costmap_manager) override;
 
-  ziyan_planner::Path createPlan(
-    const ziyan_planner::PoseStamped & start,
-    const ziyan_planner::PoseStamped & goal,
+  Path createPlan(
+    const PoseStamped & start,
+    const PoseStamped & goal,
+    std::function<bool()> cancel_checker) override;
+
+  Path createPlan(
+    const XYT& start,
+    const XYT& goal,
     std::function<bool()> cancel_checker) override;
 
   void cleanup() override;
 
 protected:
+
+  void setStartFrom(unsigned int & mx, unsigned int & my, const XYT & start, Costmap2D* costmap);
+  void setGoalFrom(unsigned int & mx, unsigned int & my, const XYT & goal, Costmap2D* costmap);
+
+  void setStartFrom(unsigned int & mx, unsigned int & my, const PoseStamped & start, Costmap2D* costmap);
+  void setGoalFrom(unsigned int & mx, unsigned int & my, const PoseStamped & goal, Costmap2D* costmap);
+
+  Path setPathWithStartOrGoal(
+    const XYT & start, const XYT & goal, bool use_final_approach_orientation);
+
+  Path setPathWithStartOrGoal(
+    const PoseStamped & start, const PoseStamped & goal, bool use_final_approach_orientation);
+
+
   std::unique_ptr<AStarAlgorithm<Node2D>> _a_star;
-  ziyan_costmap::GridCollisionChecker _collision_checker;
+  GridCollisionChecker _collision_checker;
   std::unique_ptr<Smoother> _smoother;
-  ziyan_costmap::Costmap2D * _costmap;
+  Costmap2D * _costmap;
   // std::unique_ptr<CostmapDownsampler> _costmap_downsampler;
 
   float _tolerance;
@@ -55,7 +73,7 @@ protected:
   std::string _motion_model_for_search;
   MotionModel _motion_model;
 
-  ziyan_planner::Info::WeakPtr _node;
+  Info::WeakPtr _node;
   std::string _global_frame;
 };
 

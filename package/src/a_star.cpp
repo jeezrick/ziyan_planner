@@ -103,7 +103,7 @@ void AStarAlgorithm<Node2D>::initialize(
 }
 
 template<typename NodeT>
-void AStarAlgorithm<NodeT>::setCollisionChecker(ziyan_costmap::GridCollisionChecker * collision_checker)
+void AStarAlgorithm<NodeT>::setCollisionChecker(GridCollisionChecker * collision_checker)
 {
   _collision_checker = collision_checker;
   _costmap = collision_checker->getCostmapPtr();
@@ -215,7 +215,7 @@ void AStarAlgorithm<NodeT>::setGoal(
     }
 
     NodeT::resetObstacleHeuristic(
-      _collision_checker->getCostmapZIYAN(), _start->pose.x, _start->pose.y, mx, my);
+      _collision_checker->getCostmapManagerPtr(), _start->pose.x, _start->pose.y, mx, my);
   }
 
   _goal_coordinates = goal_coords;
@@ -489,14 +489,14 @@ template<>
 void AStarAlgorithm<Node2D>::clearStart()
 {
   auto coords = Node2D::getCoords(_start->getIndex());
-  _costmap->setCost(coords.x, coords.y, ziyan_costmap::FREE_SPACE);
+  _costmap->setCost(coords.x, coords.y, FREE_SPACE);
 }
 
 template<typename NodeT>
 void AStarAlgorithm<NodeT>::clearStart()
 {
   auto coords = NodeT::getCoords(_start->getIndex(), _costmap->getSizeInCellsX(), getSizeDim3());
-  _costmap->setCost(coords.x, coords.y, ziyan_costmap::FREE_SPACE);
+  _costmap->setCost(coords.x, coords.y, FREE_SPACE);
 }
 
 // Instantiate algorithm for the supported template types

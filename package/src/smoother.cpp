@@ -30,7 +30,7 @@ void Smoother::initialize(const double & min_turning_radius)
 
 bool Smoother::smooth(
   Path & path,
-  const ziyan_costmap::Costmap2D * costmap,
+  const Costmap2D * costmap,
   const double & max_time)
 {
   // by-pass path orientations approximation when skipping smac smoother
@@ -42,7 +42,6 @@ bool Smoother::smooth(
   double time_remaining = max_time;
   bool success = true, reversing_segment;
   Path curr_path_segment;
-  curr_path_segment.header = path.header;
   std::vector<PathSegment> path_segments = findDirectionalPathSegments(path);
 
   for (unsigned int i = 0; i != path_segments.size(); i++) {
@@ -86,7 +85,7 @@ bool Smoother::smooth(
 bool Smoother::smoothImpl(
   Path & path,
   bool & reversing_segment,
-  const ziyan_costmap::Costmap2D * costmap,
+  const Costmap2D * costmap,
   const double & max_time)
 {
   steady_clock::time_point a = steady_clock::now();
@@ -153,7 +152,7 @@ bool Smoother::smoothImpl(
         cost = static_cast<float>(costmap->getCost(mx, my));
       }
 
-      if (cost > ziyan_costmap::f_MAX_NON_OBSTACLE && cost != ziyan_costmap::f_UNKNOWN) {
+      if (cost > f_MAX_NON_OBSTACLE && cost != f_UNKNOWN) {
         // RCLCPP_DEBUG(
         //   rclcpp::get_logger("SmacPlannerSmoother"),
         //   "Smoothing process resulted in an infeasible collision. "
@@ -316,7 +315,7 @@ void Smoother::findBoundaryExpansion(
   const Pose & start,
   const Pose & end,
   BoundaryExpansion & expansion,
-  const ziyan_costmap::Costmap2D * costmap)
+  const Costmap2D * costmap)
 {
   static ompl::base::ScopedState<> from(state_space_), to(state_space_), s(state_space_);
 
@@ -357,7 +356,7 @@ void Smoother::findBoundaryExpansion(
     // Check for collision
     unsigned int mx, my;
     costmap->worldToMap(x, y, mx, my);
-    if (static_cast<float>(costmap->getCost(mx, my)) >= ziyan_costmap::f_INSCRIBED) {
+    if (static_cast<float>(costmap->getCost(mx, my)) >= f_INSCRIBED) {
       expansion.in_collision = true;
     }
 
@@ -412,7 +411,7 @@ BoundaryExpansions Smoother::generateBoundaryExpansionPoints(IteratorT start, It
 void Smoother::enforceStartBoundaryConditions(
   const Pose & start_pose,
   Path & path,
-  const ziyan_costmap::Costmap2D * costmap,
+  const Costmap2D * costmap,
   const bool & reversing_segment)
 {
   // Find range of points for testing
@@ -458,7 +457,7 @@ void Smoother::enforceStartBoundaryConditions(
 void Smoother::enforceEndBoundaryConditions(
   const Pose & end_pose,
   Path & path,
-  const ziyan_costmap::Costmap2D * costmap,
+  const Costmap2D * costmap,
   const bool & reversing_segment)
 {
   // Find range of points for testing

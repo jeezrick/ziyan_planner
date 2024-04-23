@@ -1,5 +1,5 @@
-#ifndef ZIYAN_COSTMAP__COLLISION_CHECKER_HPP_
-#define ZIYAN_COSTMAP__COLLISION_CHECKER_HPP_
+#ifndef ZIYAN_PLANNER__COLLISION_CHECKER_HPP_
+#define ZIYAN_PLANNER__COLLISION_CHECKER_HPP_
 
 #include <vector>
 #include <memory>
@@ -7,13 +7,13 @@
 
 #include "pathplanner/constants.hpp"
 #include "pathplanner/costmap_manager.hpp"
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 
 
-namespace ziyan_costmap
+namespace ziyan_planner
 {
 
-typedef std::vector<ziyan_planner::Point> Footprint;
+typedef std::vector<Point> Footprint;
 
 /**
  * @class nav2_smac_planner::GridCollisionChecker
@@ -87,7 +87,8 @@ public:
    * @brief Get costmap ros object for inflation layer params
    * @return Costmap ros
    */
-  std::shared_ptr<CostmapManager> getCostmapZIYAN() {return costmap_manager_ptr_;}
+  std::shared_ptr<CostmapManager> getCostmapManagerPtr() {return costmap_manager_ptr_;}
+
   Costmap2D* getCostmapPtr() {return costmap_manager_ptr_->getCostmapPtr();}
 
 private:

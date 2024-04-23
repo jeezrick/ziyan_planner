@@ -1,11 +1,11 @@
 #include "pathplanner/costmap_manager.hpp"
 #include "pathplanner/logger.hpp"
 
-namespace ziyan_costmap 
+namespace ziyan_planner 
 {
 
 CostmapManager::CostmapManager(
-  const ziyan_planner::Info::WeakPtr & parent,
+  const Info::WeakPtr & parent,
   std::shared_ptr<Costmap2D> costmap_2d_ptr
 ) {
   auto node_ = parent.lock();
@@ -28,8 +28,8 @@ CostmapManager::CostmapManager(
 }
 
 CostmapManager::CostmapManager(
-  const ziyan_planner::Info::WeakPtr & parent, 
-  const ziyan_planner::OccupancyGrid & map
+  const Info::WeakPtr & parent, 
+  const OccupancyGrid & map
 ) {
   auto node_ = parent.lock();
 
@@ -46,7 +46,6 @@ CostmapManager::CostmapManager(
   origin_y_ = costmap_2d_ptr_->getOriginY();
 
 }
-
 
 CostmapManager::~CostmapManager()
 {

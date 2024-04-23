@@ -1,11 +1,10 @@
-
 #include <string>
 #include <memory>
 #include <algorithm>
 
 #include "pathplanner/costmap_downsampler.hpp"
 
-namespace ziyan_costmap
+namespace ziyan_planner
 {
 
 CostmapDownsampler::CostmapDownsampler()
@@ -19,7 +18,7 @@ CostmapDownsampler::~CostmapDownsampler()
 }
 
 void CostmapDownsampler::on_configure(
-  const ziyan_planner::Info::WeakPtr & node,
+  const Info::WeakPtr & node,
   const std::string & global_frame,
   const std::string & topic_name,
   Costmap2D * const costmap,
@@ -33,7 +32,7 @@ void CostmapDownsampler::on_configure(
 
   _downsampled_costmap = std::make_unique<Costmap2D>(
     _downsampled_size_x, _downsampled_size_y, _downsampled_resolution,
-    _costmap->getOriginX(), _costmap->getOriginY(), ziyan_costmap::f_UNKNOWN);
+    _costmap->getOriginX(), _costmap->getOriginY(), f_UNKNOWN);
 }
 
 void CostmapDownsampler::on_cleanup()
@@ -113,4 +112,4 @@ void CostmapDownsampler::setCostOfCell(
   _downsampled_costmap->setCost(new_mx, new_my, cost);
 }
 
-}  // namespace ziyan_costmap
+}  

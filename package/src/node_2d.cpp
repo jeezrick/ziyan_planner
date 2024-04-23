@@ -1,17 +1,3 @@
-// Copyright (c) 2020, Samsung Research America
-// Copyright (c) 2020, Applied Electric Vehicles Pty Ltd
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License. Reserved.
 #include <vector>
 #include <limits>
 
@@ -50,7 +36,7 @@ void Node2D::reset()
 
 bool Node2D::isNodeValid(
   const bool & traverse_unknown,
-  ziyan_costmap::GridCollisionChecker * collision_checker)
+  GridCollisionChecker * collision_checker)
 {
   if (collision_checker->inCollision(this->getIndex(), traverse_unknown)) {
     return false;
@@ -108,7 +94,7 @@ void Node2D::initMotionModel(
 
 void Node2D::getNeighbors(
   std::function<bool(const unsigned int &, Node2D * &)> & NeighborGetter,
-  ziyan_costmap::GridCollisionChecker * collision_checker,
+  GridCollisionChecker * collision_checker,
   const bool & traverse_unknown,
   NodeVector & neighbors)
 {

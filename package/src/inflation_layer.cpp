@@ -9,7 +9,7 @@
 
 // #define INFLATION_DEBUG
 
-namespace ziyan_costmap
+namespace ziyan_planner
 {
 
 InflationLayer::InflationLayer()
@@ -36,7 +36,7 @@ InflationLayer::~InflationLayer()
 void
 InflationLayer::initialize(
   std::shared_ptr<Costmap2D> costmap_2d_ptr, 
-  const ziyan_planner::Info::WeakPtr & nodePtr) 
+  const Info::WeakPtr & nodePtr) 
 {
   costmap_2d_ptr_ = costmap_2d_ptr;
 
@@ -168,7 +168,7 @@ InflationLayer::updateCosts(
       "The inflation list must be empty at the beginning of inflation");
   }
 
-  unsigned char * master_array = costmap_2d_ptr_ -> getCharMap();
+  uint8_t * master_array = costmap_2d_ptr_ -> getMapData();
   unsigned int size_x = costmap_2d_ptr_ -> getSizeInCellsX(), size_y = costmap_2d_ptr_ -> getSizeInCellsY();
 
   if (seen_.size() != size_x * size_y) {
@@ -209,7 +209,7 @@ InflationLayer::updateCosts(
   for (int j = min_j; j < max_j; j++) {
     for (int i = min_i; i < max_i; i++) {
       int index = static_cast<int>(costmap_2d_ptr_ -> getIndex(i, j));
-      unsigned char cost = master_array[index];
+      uint8_t cost = master_array[index];
       if (cost == LETHAL_OBSTACLE || (inflate_around_unknown_ && cost == NO_INFORMATION)) {
         obs_bin.emplace_back(index, i, j, i, j);
       }
@@ -240,8 +240,8 @@ InflationLayer::updateCosts(
       unsigned int sy = dist_bin[i].src_y_;
 
       // assign the cost associated with the distance from an obstacle to the cell
-      unsigned char cost = costLookup(mx, my, sx, sy);
-      unsigned char old_cost = master_array[index];
+      uint8_t cost = costLookup(mx, my, sx, sy);
+      uint8_t old_cost = master_array[index];
       // In order to avoid artifacts appeared out of boundary areas
       // when some layer is going after inflation_layer,
       // we need to apply inflation_layer only to inside of given bounds

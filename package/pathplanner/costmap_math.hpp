@@ -1,5 +1,5 @@
-#ifndef ZIYAN_COSTMAP__COSTMAP_MATH_HPP_
-#define ZIYAN_COSTMAP__COSTMAP_MATH_HPP_
+#ifndef ZIYAN_PLANNER__COSTMAP_MATH_HPP_
+#define ZIYAN_PLANNER__COSTMAP_MATH_HPP_
 
 #include <math.h>
 
@@ -24,4 +24,4 @@ inline double distance(double x0, double y0, double x1, double y1)
 /** @brief Gets point distance to a line */
 double distanceToLine(double pX, double pY, double x0, double y0, double x1, double y1);
 
-#endif  // ZIYAN_COSTMAP__COSTMAP_MATH_HPP_
+#endif  // ZIYAN_PLANNER__COSTMAP_MATH_HPP_

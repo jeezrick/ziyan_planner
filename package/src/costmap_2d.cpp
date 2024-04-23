@@ -1,11 +1,15 @@
 #include "pathplanner/costmap_2d.hpp"
 #include "pathplanner/logger.hpp"
 
-namespace ziyan_costmap
+#include <stdexcept>
+#include <cstring>
+
+namespace ziyan_planner
 {
+
 Costmap2D::Costmap2D(
   unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
-  double origin_x, double origin_y, unsigned char default_value)
+  double origin_x, double origin_y, uint8_t default_value)
 : resolution_(resolution), origin_x_(origin_x),
   origin_y_(origin_y), costmap_(NULL), default_value_(default_value)
 {
@@ -14,33 +18,19 @@ Costmap2D::Costmap2D(
   resetMaps();
 }
 
-Costmap2D::Costmap2D(const ziyan_planner::OccupancyGrid & map)
+Costmap2D::Costmap2D(const OccupancyGrid & map)
 : default_value_(FREE_SPACE)
 {
   // fill local variables
   size_x_ = map.width;
   size_y_ = map.height;
   resolution_ = map.resolution;
-  origin_x_ = map.origin.position.x;
-  origin_y_ = map.origin.position.y;
+  origin_x_ = map.origin_x;
+  origin_y_ = map.origin_y;
 
   // create the costmap
-  costmap_ = new unsigned char[size_x_ * size_y_];
-
-  // fill the costmap with a data
-  int8_t data;
-  for (unsigned int it = 0; it < size_x_ * size_y_; it++) {
-    data = map.data[it];
-    if (data == OCC_GRID_UNKNOWN) {
-      costmap_[it] = NO_INFORMATION;
-    } else {
-      // Linear conversion from OccupancyGrid data range [OCC_GRID_FREE..OCC_GRID_OCCUPIED]
-      // to costmap data range [FREE_SPACE..LETHAL_OBSTACLE]
-      costmap_[it] = std::round(
-        static_cast<double>(data) * (LETHAL_OBSTACLE - FREE_SPACE) /
-        (OCC_GRID_OCCUPIED - OCC_GRID_FREE));
-    }
-  }
+  costmap_ = new uint8_t[size_x_ * size_y_];
+  std::memcpy(costmap_, map.data, size_x_ * size_y_ * sizeof(uint8_t));
 
   ZIYAN_INFO(
     "Make costmap2d -> size_x: %d, size_y: %d," 
@@ -62,7 +52,7 @@ void Costmap2D::initMaps(unsigned int size_x, unsigned int size_y)
   delete[] costmap_;
   size_x_ = size_x;
   size_y_ = size_y;
-  costmap_ = new unsigned char[size_x * size_y];
+  costmap_ = new uint8_t[size_x * size_y];
 }
 
 void Costmap2D::resizeMap(
@@ -81,7 +71,7 @@ void Costmap2D::resizeMap(
 
 void Costmap2D::resetMaps()
 {
-  memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(unsigned char));
+  memset(costmap_, default_value_, size_x_ * size_y_ * sizeof(uint8_t));
 }
 
 void Costmap2D::resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn)
@@ -90,11 +80,11 @@ void Costmap2D::resetMap(unsigned int x0, unsigned int y0, unsigned int xn, unsi
 }
 
 void Costmap2D::resetMapToValue(
-  unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn, unsigned char value)
+  unsigned int x0, unsigned int y0, unsigned int xn, unsigned int yn, uint8_t value)
 {
   unsigned int len = xn - x0;
   for (unsigned int y = y0 * size_x_ + x0; y < yn * size_x_ + x0; y += size_x_) {
-    memset(costmap_ + y, value, len * sizeof(unsigned char));
+    memset(costmap_ + y, value, len * sizeof(uint8_t));
   }
 }
 
@@ -180,7 +170,7 @@ Costmap2D & Costmap2D::operator=(const Costmap2D & map)
   initMaps(size_x_, size_y_);
 
   // copy the cost map
-  memcpy(costmap_, map.costmap_, size_x_ * size_y_ * sizeof(unsigned char));
+  memcpy(costmap_, map.costmap_, size_x_ * size_y_ * sizeof(uint8_t));
 
   ZIYAN_INFO("Copy costmap2d by operator '='");
 
@@ -210,22 +200,22 @@ unsigned int Costmap2D::cellDistance(double world_dist)
   return (unsigned int)cells_dist;
 }
 
-unsigned char * Costmap2D::getCharMap() const
+uint8_t * Costmap2D::getMapData() const
 {
   return costmap_;
 }
 
-unsigned char Costmap2D::getCost(unsigned int mx, unsigned int my) const
+uint8_t Costmap2D::getCost(unsigned int mx, unsigned int my) const
 {
   return costmap_[getIndex(mx, my)];
 }
 
-unsigned char Costmap2D::getCost(unsigned int undex) const
+uint8_t Costmap2D::getCost(unsigned int undex) const
 {
   return costmap_[undex];
 }
 
-void Costmap2D::setCost(unsigned int mx, unsigned int my, unsigned char cost)
+void Costmap2D::setCost(unsigned int mx, unsigned int my, uint8_t cost)
 {
   costmap_[getIndex(mx, my)] = cost;
 }
@@ -307,7 +297,7 @@ void Costmap2D::updateOrigin(double new_origin_x, double new_origin_y)
   unsigned int cell_size_y = upper_right_y - lower_left_y;
 
   // we need a map to store the obstacles in the window temporarily
-  unsigned char * local_map = new unsigned char[cell_size_x * cell_size_y];
+  uint8_t * local_map = new uint8_t[cell_size_x * cell_size_y];
 
   // copy the local window in the costmap to the local map
   copyMapRegion(
@@ -333,121 +323,6 @@ void Costmap2D::updateOrigin(double new_origin_x, double new_origin_y)
 
   // make sure to clean up
   delete[] local_map;
-}
-
-bool Costmap2D::setConvexPolygonCost(
-  const std::vector<ziyan_planner::Point> & polygon,
-  unsigned char cost_value)
-{
-  // we assume the polygon is given in the global_frame...
-  // we need to transform it to map coordinates
-  std::vector<MapLocation> map_polygon;
-  for (unsigned int i = 0; i < polygon.size(); ++i) {
-    MapLocation loc;
-    if (!worldToMap(polygon[i].x, polygon[i].y, loc.x, loc.y)) {
-      // ("Polygon lies outside map bounds, so we can't fill it");
-      return false;
-    }
-    map_polygon.push_back(loc);
-  }
-
-  std::vector<MapLocation> polygon_cells;
-
-  // get the cells that fill the polygon
-  convexFillCells(map_polygon, polygon_cells);
-
-  // set the cost of those cells
-  for (unsigned int i = 0; i < polygon_cells.size(); ++i) {
-    unsigned int index = getIndex(polygon_cells[i].x, polygon_cells[i].y);
-    costmap_[index] = cost_value;
-  }
-  return true;
-}
-
-void Costmap2D::polygonOutlineCells(
-  const std::vector<MapLocation> & polygon,
-  std::vector<MapLocation> & polygon_cells)
-{
-  PolygonOutlineCells cell_gatherer(*this, costmap_, polygon_cells);
-  for (unsigned int i = 0; i < polygon.size() - 1; ++i) {
-    raytraceLine(cell_gatherer, polygon[i].x, polygon[i].y, polygon[i + 1].x, polygon[i + 1].y);
-  }
-  if (!polygon.empty()) {
-    unsigned int last_index = polygon.size() - 1;
-    // we also need to close the polygon by going from the last point to the first
-    raytraceLine(
-      cell_gatherer, polygon[last_index].x, polygon[last_index].y, polygon[0].x,
-      polygon[0].y);
-  }
-}
-
-void Costmap2D::convexFillCells(
-  const std::vector<MapLocation> & polygon,
-  std::vector<MapLocation> & polygon_cells)
-{
-  // we need a minimum polygon of a triangle
-  if (polygon.size() < 3) {
-    return;
-  }
-
-  // first get the cells that make up the outline of the polygon
-  polygonOutlineCells(polygon, polygon_cells);
-
-  // quick bubble sort to sort points by x
-  MapLocation swap;
-  unsigned int i = 0;
-  while (i < polygon_cells.size() - 1) {
-    if (polygon_cells[i].x > polygon_cells[i + 1].x) {
-      swap = polygon_cells[i];
-      polygon_cells[i] = polygon_cells[i + 1];
-      polygon_cells[i + 1] = swap;
-
-      if (i > 0) {
-        --i;
-      }
-    } else {
-      ++i;
-    }
-  }
-
-  i = 0;
-  MapLocation min_pt;
-  MapLocation max_pt;
-  unsigned int min_x = polygon_cells[0].x;
-  unsigned int max_x = polygon_cells[polygon_cells.size() - 1].x;
-
-  // walk through each column and mark cells inside the polygon
-  for (unsigned int x = min_x; x <= max_x; ++x) {
-    if (i >= polygon_cells.size() - 1) {
-      break;
-    }
-
-    if (polygon_cells[i].y < polygon_cells[i + 1].y) {
-      min_pt = polygon_cells[i];
-      max_pt = polygon_cells[i + 1];
-    } else {
-      min_pt = polygon_cells[i + 1];
-      max_pt = polygon_cells[i];
-    }
-
-    i += 2;
-    while (i < polygon_cells.size() && polygon_cells[i].x == x) {
-      if (polygon_cells[i].y < min_pt.y) {
-        min_pt = polygon_cells[i];
-      } else if (polygon_cells[i].y > max_pt.y) {
-        max_pt = polygon_cells[i];
-      }
-      ++i;
-    }
-
-    MapLocation pt;
-    // loop though cells in the column
-    for (unsigned int y = min_pt.y; y <= max_pt.y; ++y) {
-      pt.x = x;
-      pt.y = y;
-      polygon_cells.push_back(pt);
-    }
-  }
 }
 
 unsigned int Costmap2D::getSizeInCellsX() const
@@ -496,7 +371,7 @@ bool Costmap2D::saveMap(std::string file_name)
   fprintf(fp, "P2\n%u\n%u\n%u\n", size_x_, size_y_, 0xff);
   for (unsigned int iy = 0; iy < size_y_; iy++) {
     for (unsigned int ix = 0; ix < size_x_; ix++) {
-      unsigned char cost = getCost(ix, iy);
+      uint8_t cost = getCost(ix, iy);
       fprintf(fp, "%d ", cost);
     }
     fprintf(fp, "\n");

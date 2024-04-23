@@ -1,16 +1,15 @@
-#include <pathplanner/ziyan_io.hpp>
+#include <pathplanner/planner_io.hpp>
 #include "pathplanner/logger.hpp"
 #include <pathplanner/costmap_2d.hpp>
 #include "pathplanner/inflation_layer.hpp"
 #include "pathplanner/costmap_manager.hpp"
-#include <pathplanner/smac_planner_hybrid.hpp>
-#include <pathplanner/smac_planner_2d.hpp>
+#include <pathplanner/astar_planner_2d.hpp>
+#include <pathplanner/astar_planner_hybrid.hpp>
 
 #include "main_aux.hpp"
 #include <assert.h>
 
 using namespace ziyan_planner;
-using namespace ziyan_costmap;
 
 int main() {
     // parse config
@@ -25,13 +24,16 @@ int main() {
 
     std::streamsize buffer_size = x * y * sizeof(uint8_t);
     uint8_t* map_u = new uint8_t[x * y];
-    int8_t* map_i = new int8_t[x * y];
-
     try
     {
         readArray(data_path + configMap["other.map_data_path"], map_u, buffer_size);
-        convertArray(map_i, map_u, x*y);
-        delete[] map_u;
+        for (size_t i = 0; i < x*y; ++i) {
+            uint8_t value = map_u[i]; 
+            if (value == 1) {
+                value = 254; // 将值为 1 的元素修改为 100
+            }
+            map_u[i] = value; // 将修改后的值存回数组中
+        }
     }
     catch (const std::runtime_error& e)
     {
@@ -44,11 +46,13 @@ int main() {
         node->occupancymap_params.resolution,
         node->occupancymap_params.origin_x, 
         node->occupancymap_params.origin_y, 
-        map_i
+        map_u
     );
     std::shared_ptr<CostmapManager> costmap_ziyan = std::make_shared<CostmapManager>(
         node, ins_map    
     );
+    delete[] map_u;
+
     Costmap2D* costmap_ptr = costmap_ziyan->getCostmapPtr();
     costmap_ptr -> saveMap(data_path + configMap["other.map_after_inflation_path"]);
 
@@ -84,16 +88,16 @@ int main() {
         planner_2d->cleanup();
         planner_2d.reset();
 
-        ZIYAN_INFO("Path size: %d", path.path.size());
-        unsigned int* out = new unsigned int[path.path.size() * 2];
+        ZIYAN_INFO("Path size: %d", path.poses.size());
+        unsigned int* out = new unsigned int[path.poses.size() * 2];
         int iidx = 0;
-        for (const Entry& coord : path.path) {
+        for (const XYT& coord : path.xyt_vec) {
             out[iidx++] = coord.x;
             out[iidx++] = coord.y;
         }
 
         std::string file_name = data_path + "/out_path_2d" + path_suffix + ".bin";
-        saveArray(out, path.path.size() * 2, file_name);
+        saveArray(out, path.xyt_vec.size() * 2, file_name);
         delete[] out;
     }
 
@@ -112,22 +116,22 @@ int main() {
         planner.reset();
 
         {
-            ZIYAN_INFO("Path size: %d", path.path.size());
-            unsigned int* out = new unsigned int[path.path.size() * 2];
+            ZIYAN_INFO("Path size: %d", path.xyt_vec.size());
+            unsigned int* out = new unsigned int[path.xyt_vec.size() * 2];
             int iidx = 0;
-            for (const Entry& coord : path.path) {
+            for (const XYT& coord : path.xyt_vec) {
                 // std::cout << "x: " << coord.x << ", y: " << coord.y << std::endl;
                 out[iidx++] = coord.x;
                 out[iidx++] = coord.y;
             }
 
             std::string file_name = data_path + "/out_path_hybrid" + path_suffix + ".bin";
-            saveArray(out, path.path.size() * 2, file_name);
+            saveArray(out, path.xyt_vec.size() * 2, file_name);
             delete[] out;
         }
 
         {
-            double* poseout = new double[path.path.size() * 2];
+            double* poseout = new double[path.poses.size() * 2];
             int iidx = 0;
             for (const PoseStamped& pose : path.poses) {
                 // std::cout << "x: " << pose.pose.position.x << ", y: " << pose.pose.position.y << std::endl;
@@ -136,7 +140,7 @@ int main() {
             }
 
             std::string file_name = data_path + "/out_path_hybrid_world" + path_suffix + ".bin";
-            saveArray(poseout, path.path.size() * 2, file_name);
+            saveArray(poseout, path.poses.size() * 2, file_name);
             delete[] poseout;
         }
     }

@@ -6,7 +6,7 @@
 #include <string>
 #include <memory>
 
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 
 namespace ziyan_planner 
 {
@@ -57,7 +57,7 @@ struct SmootherParams
    * @param node Ptr to node
    * @param name Name of plugin
    */
-  void get(std::shared_ptr<ziyan_planner::Info> node)
+  void get(std::shared_ptr<Info> node)
   {
     tolerance_ = node->smoother.tolerance;
     max_its_ = node->smoother.max_iterations;

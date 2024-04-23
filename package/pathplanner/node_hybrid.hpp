@@ -287,7 +287,7 @@ public:
    * @param traverse_unknown If we can explore unknown nodes on the graph
    * @return whether this node is valid and collision free
    */
-  bool isNodeValid(const bool & traverse_unknown, ziyan_costmap::GridCollisionChecker * collision_checker);
+  bool isNodeValid(const bool & traverse_unknown, GridCollisionChecker * collision_checker);
 
   /**
    * @brief Get traversal cost of parent node to child node
@@ -413,7 +413,7 @@ public:
    * @param goal_coords Coordinates to start heuristic expansion at
    */
   static void resetObstacleHeuristic(
-    std::shared_ptr<ziyan_costmap::CostmapManager> costmap_ziyan,
+    std::shared_ptr<CostmapManager> costmap_manager,
     const unsigned int & start_x, const unsigned int & start_y,
     const unsigned int & goal_x, const unsigned int & goal_y);
 
@@ -434,7 +434,7 @@ public:
    */
   void getNeighbors(
     std::function<bool(const unsigned int &, NodeHybrid * &)> & validity_checker,
-    ziyan_costmap::GridCollisionChecker * collision_checker,
+    GridCollisionChecker * collision_checker,
     const bool & traverse_unknown,
     NodeVector & neighbors);
 
@@ -455,10 +455,10 @@ public:
   static LookupTable obstacle_heuristic_lookup_table;
   static ObstacleHeuristicQueue obstacle_heuristic_queue;
 
-  static ziyan_costmap::Costmap2D * sampled_costmap;
-  static std::shared_ptr<ziyan_costmap::CostmapManager> costmap_ziyan;
-  static std::shared_ptr<ziyan_costmap::InflationLayer> inflation_layer;
-  static ziyan_costmap::CostmapDownsampler downsampler;
+  static Costmap2D * sampled_costmap;
+  static std::shared_ptr<CostmapManager> costmap_ziyan;
+  static std::shared_ptr<InflationLayer> inflation_layer;
+  static CostmapDownsampler downsampler;
   // Dubin / Reeds-Shepp lookup and size for dereferencing
   static LookupTable dist_heuristic_lookup_table;
   static float size_lookup;

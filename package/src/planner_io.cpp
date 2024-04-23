@@ -1,4 +1,4 @@
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 #include "pathplanner/logger.hpp"
 
 namespace ziyan_planner
@@ -6,13 +6,13 @@ namespace ziyan_planner
   OccupancyGrid::OccupancyGrid(
     unsigned int width, unsigned int height, double resolution, 
     double origin_x, double origin_y, 
-    int8_t* data)
+    uint8_t* data)
   {
     this->width = width;
     this->height = height;
     this->resolution = resolution;
-    this->origin.position.x = origin_x;
-    this->origin.position.y = origin_y;
+    this->origin_x = origin_x;
+    this->origin_y = origin_y;
     this->data = data;
 
     ZIYAN_INFO("Make OccupancyGrid -> "
@@ -23,8 +23,8 @@ namespace ziyan_planner
 
   OccupancyGrid::~OccupancyGrid()
   {
-    delete[] data;
-    ZIYAN_INFO("delete data.");
+    data = nullptr;
+    ZIYAN_INFO("set pointer of OccupancyGrid to nullptr.");
   }
 
   Point & Point::operator=(const Point & other)

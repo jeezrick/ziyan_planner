@@ -11,6 +11,18 @@
 namespace ziyan_planner
 {
 
+const float f_UNKNOWN = 255.0;
+const float f_OCCUPIED = 254.0;
+const float f_INSCRIBED = 253.0;
+const float f_MAX_NON_OBSTACLE = 252.0;
+const float f_FREE = 0;
+
+static constexpr uint8_t NO_INFORMATION = 255;
+static constexpr uint8_t LETHAL_OBSTACLE = 254;
+static constexpr uint8_t INSCRIBED_INFLATED_OBSTACLE = 253;
+static constexpr uint8_t MAX_NON_OBSTACLE = 252;
+static constexpr uint8_t FREE_SPACE = 0;
+
 class Info 
 {
 public:
@@ -118,16 +130,11 @@ public:
 }; 
 
 
-struct Entry
-{
-  int x=0, y=0;
-
-  Entry(float x, float y){
-    this -> x = x;
-    this -> y = y;
-  }
+struct XYT{
+  XYT(){}
+  XYT(float _x, float _y, float _t) : x(_x), y(_y), t(_t) {}
+  float x, y, t;
 };
-
 
 class Position
 {
@@ -147,6 +154,9 @@ public:
   double y = 0.0;
   double z = 0.0;
   double w = 1.0;
+
+  Quaternion() {}
+  Quaternion(double _x, double _y, double _z, double _w) : x(_x), y(_y), z(_z), w(_w) {}
 
   bool operator==(const Quaternion& other) const
   {
@@ -189,14 +199,6 @@ public:
 
 };
 
-
-struct Header
-{
-  int stamp= 0;
-  std::string frame_id = "0";
-};
-
-
 class Pose
 {
 public:
@@ -205,21 +207,17 @@ public:
   Pose & operator=(const Pose& other);
 };
 
-
 class PoseStamped
 {
 public:
   Pose pose;
-  Header header;
 };
-
 
 class Path
 {
 public:
-  Header header;
   std::vector<PoseStamped> poses;
-  std::vector<Entry> path;
+  std::vector<XYT> xyt_vec;
 };
 
 
@@ -253,16 +251,17 @@ public:
     unsigned int width, unsigned int height, 
     double resolution, 
     double origin_x, double origin_y, 
-    int8_t* data);
+    uint8_t* data);
   
   ~OccupancyGrid();
 
   unsigned int width;
   unsigned int height;
   double resolution;
-  Pose origin;
+  double origin_x;
+  double origin_y;
 
-  int8_t* data; // occupancy array
+  uint8_t* data; // occupancy array
 };
 
 
@@ -317,6 +316,10 @@ double getYaw(const Quaternion& q)
   return yaw;
 }
 
+inline Quaternion yawToQuaternion(double yaw) {
+  double halfYaw = yaw * 0.5;
+  return Quaternion(0, 0, sin(halfYaw), cos(halfYaw)); // x, y, z, w
+}
 
 }; 
 

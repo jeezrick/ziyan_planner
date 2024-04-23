@@ -1,5 +1,5 @@
-#ifndef ZIYAN_COSTMAP__COSTMAP_DOWNSAMPLER_HPP_
-#define ZIYAN_COSTMAP__COSTMAP_DOWNSAMPLER_HPP_
+#ifndef ZIYAN_PLANNER__COSTMAP_DOWNSAMPLER_HPP_
+#define ZIYAN_PLANNER__COSTMAP_DOWNSAMPLER_HPP_
 
 #include <algorithm>
 #include <string>
@@ -8,9 +8,9 @@
 #include "pathplanner/constants.hpp"
 #include "pathplanner/costmap_2d.hpp"
 #include "pathplanner/costmap_manager.hpp"
-#include "pathplanner/ziyan_io.hpp"
+#include "pathplanner/planner_io.hpp"
 
-namespace ziyan_costmap
+namespace ziyan_planner
 {
 
 class CostmapDownsampler
@@ -29,7 +29,7 @@ public:
    * @param use_min_cost_neighbor If true, min function is used instead of max for downsampling
    */
   void on_configure(
-    const ziyan_planner::Info::WeakPtr & node,
+    const Info::WeakPtr & node,
     const std::string & global_frame,
     const std::string & topic_name,
     Costmap2D * const costmap,
@@ -81,4 +81,4 @@ protected:
 
 }  
 
-#endif  // ZIYAN_COSTMAP__COSTMAP_DOWNSAMPLER_HPP_
+#endif  
