@@ -1,0 +1,12 @@
+ztest/
+.vscode/
+data/out*
+build/
+backup/
+todo.md
+makefile
+third/
+out*
+test.cc
+**__pycache__**
+lib/
