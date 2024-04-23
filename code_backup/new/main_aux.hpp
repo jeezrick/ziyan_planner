@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include "pathplanner/planner_io.hpp"
+#include "ziyan_io/ziyan_io.hpp"
 
 
 template <typename T> void static inline saveArray(T* in_array, size_t length, std::string filepath)
@@ -50,11 +50,11 @@ void readArray(std::string filepath, void* buffer, std::streamsize size)
     std::cout << "Load file: " << filepath << " successful." << std::endl;
 }
 
-void convertArray(uint8_t* dst, uint8_t* src, size_t size) {
+void convertArray(int8_t* dst, uint8_t* src, size_t size) {
     for (size_t i = 0; i < size; ++i) {
-        uint8_t value = src[i]; 
+        int8_t value = static_cast<int8_t>(src[i]); // 将 uint8_t 转换为 int8_t
         if (value == 1) {
-            value = 254; // 将值为 1 的元素修改为 100
+            value = 100; // 将值为 1 的元素修改为 100
         }
         dst[i] = value; // 将修改后的值存回数组中
     }
@@ -94,7 +94,7 @@ std::unordered_map<std::string, std::string> parseConfigFile(const std::string& 
 
 void readConfigFileToInfo(
     std::unordered_map<std::string, std::string> configMap, 
-    std::shared_ptr<ziyan_planner::Info> node) 
+    std::shared_ptr<ZiYan_IO::Info> node) 
 {
     try {
         // Smoother parameters

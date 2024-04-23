@@ -1,42 +1,36 @@
 cmake_minimum_required(VERSION 3.12)
-project(myprogram)
+project(myplanner)
 
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")  # 关闭所有警告信息
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g")  # 关闭所有警告信息
 
+# Set the output directory for the build executables and libraries
+SET(planner_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib CACHE PATH "Target for the libraries")
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${planner_LIBRARY_OUTPUT_DIRECTORY})
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${planner_LIBRARY_OUTPUT_DIRECTORY})
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${planner_LIBRARY_OUTPUT_DIRECTORY})
+
+
+set(PLANNER_SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/src)
+message(${PLANNER_SOURCES_DIR})
+
+find_package(Eigen3 3.1.0 REQUIRED)
+
+set(FIND_OMPL_DIR /home/dwang/code/workspace/ziyan_pathplanner/thirdparty)
+message(${FIND_OMPL_DIR})
+
 include_directories(
-    ./src/ziyan_io/include
-    ./src/map/include
-    ./src/planner/include
-    ./thirdparty/eigen3
-    ./thirdparty/ompl/src
+    ${EIGEN3_INCLUDE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${FIND_OMPL_DIR}/ompl/src
 )
 
-set(MAP_SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/map/src)
-set(PLANNER_SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/planner/src)
-set(ZIYAN_IO_SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/ziyan_io/src)
-
-file(GLOB Target_SRCS
-    ${MAP_SOURCES_DIR}/*.cpp
+file(GLOB LIB_SRCS
     ${PLANNER_SOURCES_DIR}/*.cpp
-    ${ZIYAN_IO_SOURCES_DIR}/*.cpp
 )
 
-option(BUILD_Target "Building Target" ON)
-
-# add_subdirectory(thirdparty/ompl)
-# if(BUILD_Target)
-#     message("Building Target")
-#     add_executable(myprogram main.cpp ${Target_SRCS})
-#     target_link_libraries(myprogram
-#         ompl
-#     )
-# endif()
-
-if(BUILD_Target)
-    message("Building Target")
-    add_executable(myprogram main.cpp ${Target_SRCS})
-    target_link_libraries(myprogram
-        ${PROJECT_SOURCE_DIR}/thirdparty/ompl/build/src/ompl/libompl.so
-    )
-endif() 
+add_library(${PROJECT_NAME} SHARED ${LIB_SRCS})
+target_link_libraries(${PROJECT_NAME}
+    ${FIND_OMPL_DIR}/ompl/build/src/ompl/libompl.so
+)
