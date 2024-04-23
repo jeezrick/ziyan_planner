@@ -244,33 +244,6 @@ public:
 };
 
 
-class OccupancyGrid
-{
-public:
-  OccupancyGrid(
-    unsigned int width, unsigned int height, 
-    double resolution, 
-    double origin_x, double origin_y, 
-    uint8_t* data);
-
-  OccupancyGrid(
-    unsigned char* data, 
-    unsigned int width, unsigned int height, double resolution, 
-    double origin_x, double origin_y
-  );
- 
-  ~OccupancyGrid();
-
-  unsigned int width;
-  unsigned int height;
-  double resolution;
-  double origin_x;
-  double origin_y;
-
-  uint8_t* data; // occupancy array
-};
-
-
 class Point32
 {
 public:

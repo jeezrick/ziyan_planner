@@ -24,7 +24,15 @@ public:
 
   explicit CostmapManager(
     const Info::WeakPtr & parent, 
-    const OccupancyGrid & map
+    unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+    double origin_x, double origin_y, uint8_t* data_ptr
+  );
+
+  explicit CostmapManager(
+    const Info::WeakPtr & parent, 
+    unsigned char* data_ptr, 
+    unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+    double origin_x, double origin_y 
   );
 
   ~CostmapManager();

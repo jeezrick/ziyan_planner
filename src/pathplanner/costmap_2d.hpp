@@ -38,11 +38,8 @@ public:
    */
   Costmap2D(const Costmap2D & map);
 
-  /**
-   * @brief  Constructor for a costmap from an OccupancyGrid map
-   * @param  map The OccupancyGrid map to create costmap from
-   */
-  explicit Costmap2D(const OccupancyGrid & map);
+  explicit Costmap2D(unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+    double origin_x, double origin_y, uint8_t* data_ptr);
 
   /**
    * @brief  Overloaded assignment operator

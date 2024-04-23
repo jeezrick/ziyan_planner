@@ -18,19 +18,21 @@ Costmap2D::Costmap2D(
   resetMaps();
 }
 
-Costmap2D::Costmap2D(const OccupancyGrid & map)
+Costmap2D::Costmap2D(
+  unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+  double origin_x, double origin_y, uint8_t* data_ptr)
 : default_value_(FREE_SPACE)
 {
   // fill local variables
-  size_x_ = map.width;
-  size_y_ = map.height;
-  resolution_ = map.resolution;
-  origin_x_ = map.origin_x;
-  origin_y_ = map.origin_y;
+  size_x_ = cells_size_x;
+  size_y_ = cells_size_y;
+  resolution_ = resolution;
+  origin_x_ = origin_x;
+  origin_y_ = origin_y;
 
   // create the costmap
   costmap_ = new uint8_t[size_x_ * size_y_];
-  std::memcpy(costmap_, map.data, size_x_ * size_y_ * sizeof(uint8_t));
+  std::memcpy(costmap_, data_ptr, size_x_ * size_y_ * sizeof(uint8_t));
 
   ZIYAN_INFO(
     "Make costmap2d -> size_x: %d, size_y: %d," 

@@ -3,40 +3,6 @@
 
 namespace ziyan_planner
 {
-  OccupancyGrid::OccupancyGrid(
-    unsigned int width, unsigned int height, double resolution, 
-    double origin_x, double origin_y, 
-    uint8_t* data)
-  {
-    this->width = width;
-    this->height = height;
-    this->resolution = resolution;
-    this->origin_x = origin_x;
-    this->origin_y = origin_y;
-    this->data = data;
-
-    ZIYAN_INFO("Make OccupancyGrid -> "
-      "width: %d, height: %d, resolution: %.3f, origin_x: %.3f, origin_y: %.3f", 
-      width, height, resolution, origin_x, origin_y
-    );
-  };
-
-  OccupancyGrid::OccupancyGrid(
-    unsigned char* data, 
-    unsigned int width, unsigned int height, double resolution, 
-    double origin_x, double origin_y
-  )
-  {
-    uint8_t *converted_data = reinterpret_cast<uint8_t *>(data);
-    OccupancyGrid(width, height, resolution, origin_x, origin_y, converted_data);
-  };
-
-  OccupancyGrid::~OccupancyGrid()
-  {
-    data = nullptr;
-    ZIYAN_INFO("set pointer of OccupancyGrid to nullptr.");
-  }
-
   Point & Point::operator=(const Point & other)
   {
     // check for self assignement

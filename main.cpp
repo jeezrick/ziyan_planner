@@ -14,7 +14,7 @@ using namespace ziyan_planner;
 int main() {
     // parse config
     Info::SharedPtr node = std::make_shared<Info>();
-    auto configMap = parseConfigFile("../data/config.cfg");
+    auto configMap = parseConfigFile("./data/config.cfg");
     readConfigFileToInfo(configMap, node);
     std::string data_path = configMap["other.data_path"];
 
@@ -40,16 +40,14 @@ int main() {
         std::cerr << e.what() << std::endl;
     }
 
-    OccupancyGrid ins_map(
+    std::shared_ptr<CostmapManager> costmap_ziyan = std::make_shared<CostmapManager>(
+        node,    
         node->occupancymap_params.width, 
         node->occupancymap_params.height, 
         node->occupancymap_params.resolution,
         node->occupancymap_params.origin_x, 
         node->occupancymap_params.origin_y, 
         map_u
-    );
-    std::shared_ptr<CostmapManager> costmap_ziyan = std::make_shared<CostmapManager>(
-        node, ins_map    
     );
     delete[] map_u;
 
