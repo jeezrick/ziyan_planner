@@ -21,6 +21,16 @@ namespace ziyan_planner
     );
   };
 
+  OccupancyGrid::OccupancyGrid(
+    unsigned char* data, 
+    unsigned int width, unsigned int height, double resolution, 
+    double origin_x, double origin_y
+  )
+  {
+    uint8_t *converted_data = reinterpret_cast<uint8_t *>(data);
+    OccupancyGrid(width, height, resolution, origin_x, origin_y, converted_data);
+  };
+
   OccupancyGrid::~OccupancyGrid()
   {
     data = nullptr;

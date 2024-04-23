@@ -17,7 +17,7 @@ message(${PLANNER_SOURCES_DIR})
 
 find_package(Eigen3 3.1.0 REQUIRED)
 
-set(FIND_OMPL_DIR /home/dwang/code/workspace/ziyan_pathplanner/thirdparty)
+set(FIND_OMPL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty)
 message(${FIND_OMPL_DIR})
 
 include_directories(
