@@ -26,6 +26,7 @@ _smoother(nullptr),
 // _costmap_downsampler(nullptr)
 _costmap(nullptr)
 {
+  _node = std::make_shared<Info>();
   auto configMap = parseConfigFile(cfg_path);
   readConfigFileToInfo(configMap, _node); 
 
