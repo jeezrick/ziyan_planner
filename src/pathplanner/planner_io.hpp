@@ -108,6 +108,8 @@ public:
 
     double radius = 0.05; // meter, to make footprint
     float footprint_padding = 0.0;
+    bool save_inflated_map = false;
+    std::string save_path = "./out_inflation.pgm";
   };
   InflationParams inflation_params;
 

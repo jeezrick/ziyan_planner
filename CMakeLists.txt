@@ -38,3 +38,8 @@ target_link_libraries(${PROJECT_NAME}
 # 添加可执行文件 main.cpp
 add_executable(main main.cpp)
 target_link_libraries(main ${PROJECT_NAME})
+
+# 添加可执行文件 main.cpp
+add_executable(main_2 main_2.cpp)
+target_link_libraries(main_2 ${PROJECT_NAME})
+

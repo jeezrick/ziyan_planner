@@ -21,11 +21,16 @@ namespace ziyan_planner
 class AstarPlanner2D : public AstarPlanner
 {
 public:
-  AstarPlanner2D(const Info::WeakPtr & parent);
+  AstarPlanner2D(const Info::SharedPtr & parent);
+  AstarPlanner2D(const std::string & cfg_path);
 
   ~AstarPlanner2D() override;
 
   void setMap(std::shared_ptr<CostmapManager> costmap_manager) override;
+
+  void setMap(
+  unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+  double origin_x, double origin_y, uint8_t* data_ptr) override;
 
   Path createPlan(
     const PoseStamped & start,
@@ -40,6 +45,8 @@ public:
   void cleanup() override;
 
 protected:
+  void init();
+  void _setMap_core();
 
   void setStartFrom(unsigned int & mx, unsigned int & my, const XYT & start, Costmap2D* costmap);
   void setGoalFrom(unsigned int & mx, unsigned int & my, const XYT & goal, Costmap2D* costmap);
@@ -58,6 +65,7 @@ protected:
   GridCollisionChecker _collision_checker;
   std::unique_ptr<Smoother> _smoother;
   Costmap2D * _costmap;
+  std::shared_ptr<CostmapManager> _costmap_manager_ptr;
   // std::unique_ptr<CostmapDownsampler> _costmap_downsampler;
 
   float _tolerance;
@@ -73,8 +81,9 @@ protected:
   std::string _motion_model_for_search;
   MotionModel _motion_model;
 
-  Info::WeakPtr _node;
   std::string _global_frame;
+
+  Info::SharedPtr _node;
 };
 
 }

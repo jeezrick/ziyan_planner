@@ -1,10 +1,9 @@
 #include <pathplanner/planner_io.hpp>
 #include "pathplanner/logger.hpp"
-#include <pathplanner/costmap_2d.hpp>
-#include "pathplanner/inflation_layer.hpp"
 #include "pathplanner/costmap_manager.hpp"
 #include <pathplanner/astar_planner_2d.hpp>
 #include <pathplanner/astar_planner_hybrid.hpp>
+#include "pathplanner/cfg.hpp"
 
 #include "main_aux.hpp"
 #include <assert.h>
@@ -27,13 +26,13 @@ int main() {
     try
     {
         readArray(data_path + configMap["other.map_data_path"], map_u, buffer_size);
-        for (size_t i = 0; i < x*y; ++i) {
-            uint8_t value = map_u[i]; 
-            if (value == 1) {
-                value = 254; // 将值为 1 的元素修改为 100
-            }
-            map_u[i] = value; // 将修改后的值存回数组中
-        }
+        // for (size_t i = 0; i < x*y; ++i) {
+        //     uint8_t value = map_u[i]; 
+        //     if (value == 1) {
+        //         value = 254; // 将值为 1 的元素修改为 100
+        //     }
+        //     map_u[i] = value; // 将修改后的值存回数组中
+        // }
     }
     catch (const std::runtime_error& e)
     {
@@ -55,22 +54,27 @@ int main() {
     costmap_ptr -> saveMap(data_path + configMap["other.map_after_inflation_path"]);
 
     PoseStamped start, end;
-    costmap_ptr->mapToWorld(start_x, start_y, start.pose.position.x, start.pose.position.y);
-    costmap_ptr->mapToWorld(end_x, end_y, end.pose.position.x, end.pose.position.y);
+    start.pose.position.x = start_x;
+    start.pose.position.y = start_y;
+    end.pose.position.x = end_x;
+    end.pose.position.y = end_y;
+
+    // costmap_ptr->mapToWorld(start_x, start_y, start.pose.position.x, start.pose.position.y);
+    // costmap_ptr->mapToWorld(end_x, end_y, end.pose.position.x, end.pose.position.y);
 
     unsigned int ref_x_s, ref_y_s, ref_x_e, ref_y_e;
     costmap_ptr->worldToMap(start.pose.position.x, start.pose.position.y, ref_x_s, ref_y_s);
     costmap_ptr->worldToMap(end.pose.position.x, end.pose.position.y, ref_x_e, ref_y_e);
+    std::cout << "ref_x_s: " << ref_x_s << ", ref_y_s: " << ref_y_s << std::endl;   
+    std::cout << "ref_x_e: " << ref_x_e << ", ref_y_e: " << ref_y_e << std::endl;
     
-    assert(ref_x_s == start_x && ref_y_s == start_y); 
-    assert(ref_x_e == end_x && ref_y_e == end_y);
-
     std::stringstream ss;
     ss << "_s(" << start_x << "_" << start_y << ")"
        << "_e(" << end_x << "_" << end_y << ")"
        << "_r(" <<node->plannerhybrid_params.minimum_turning_radius << ")";
     std::string path_suffix = ss.str();
     std::cout << path_suffix << std::endl;
+    
     // plan astar 2d
     {
         auto planner_2d = std::make_unique<AstarPlanner2D>(node);

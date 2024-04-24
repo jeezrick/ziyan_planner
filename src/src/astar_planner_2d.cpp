@@ -9,6 +9,7 @@
 
 #include "pathplanner/astar_planner_2d.hpp"
 #include "pathplanner/logger.hpp"
+#include "pathplanner/cfg.hpp"
 
 
 #define BENCHMARK_TESTING
@@ -18,16 +19,33 @@ namespace ziyan_planner
 
 using namespace std::chrono;  // NOLINT
 
-AstarPlanner2D::AstarPlanner2D(
-  const Info::WeakPtr & parent) : AstarPlanner(parent), 
+AstarPlanner2D::AstarPlanner2D(const std::string & cfg_path) : AstarPlanner(cfg_path),
 _a_star(nullptr),
 _collision_checker(nullptr, 1),
 _smoother(nullptr),
 // _costmap_downsampler(nullptr)
 _costmap(nullptr)
 {
-   _node = parent;
-  auto node = parent.lock(); // get SharedPtr
+  auto configMap = parseConfigFile(cfg_path);
+  readConfigFileToInfo(configMap, _node); 
+
+  init();
+}
+
+AstarPlanner2D::AstarPlanner2D(const Info::SharedPtr & parent) : AstarPlanner(parent), 
+_a_star(nullptr),
+_collision_checker(nullptr, 1),
+_smoother(nullptr),
+// _costmap_downsampler(nullptr)
+_costmap(nullptr)
+{
+  _node = parent;
+  init();
+}
+
+void AstarPlanner2D::init() 
+{
+  auto node = _node; // get SharedPtr
 
   ZIYAN_INFO("Configuring of type AstarPlanner2D");
 
@@ -82,14 +100,30 @@ AstarPlanner2D::~AstarPlanner2D() {
 }
 
 void AstarPlanner2D::setMap(
+  unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+  double origin_x, double origin_y, uint8_t* data_ptr) 
+{
+  _costmap_manager_ptr = std::make_shared<CostmapManager>(
+    _node, cells_size_x, cells_size_y, resolution, origin_x, origin_y, data_ptr);
+  
+  _setMap_core();
+}
+
+void AstarPlanner2D::setMap(
   std::shared_ptr<CostmapManager> costmap_manager) 
 {
-  _costmap = costmap_manager->getCostmapPtr();
+  _costmap_manager_ptr = costmap_manager;
+  _setMap_core();
+}
+
+void AstarPlanner2D::_setMap_core()
+{
+  _costmap = _costmap_manager_ptr->getCostmapPtr();
 
   // Initialize collision checker
-  _collision_checker = GridCollisionChecker(costmap_manager, 1 /*for 2D, most be 1*/);
+  _collision_checker = GridCollisionChecker(_costmap_manager_ptr, 1 /*for 2D, most be 1*/);
   _collision_checker.setFootprint(
-    costmap_manager->getRobotFootprint(),
+    _costmap_manager_ptr->getRobotFootprint(),
     true /*for 2D, most use radius*/,
     0.0 /*for 2D cost at inscribed isn't relevent*/
   );

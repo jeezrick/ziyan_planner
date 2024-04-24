@@ -21,10 +21,17 @@ namespace ziyan_planner
 class AstarPlannerHybrid : public AstarPlanner
 {
 public:
-  AstarPlannerHybrid(const Info::WeakPtr & parent);
+  AstarPlannerHybrid(const Info::SharedPtr & parent);
+  AstarPlannerHybrid(const std::string & cfg_path);
+
   ~AstarPlannerHybrid() override;
   void setMap(
     std::shared_ptr<CostmapManager> costmap_ziyan) override; 
+
+  void setMap(
+  unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+  double origin_x, double origin_y, uint8_t* data_ptr) override;
+
 
   Path createPlan(
     const PoseStamped & start,
@@ -39,6 +46,8 @@ public:
   void cleanup() override;
 
 protected:
+  void _setMap_core();
+  void init();
 
   std::unique_ptr<AStarAlgorithm<NodeHybrid>> _a_star;
   GridCollisionChecker _collision_checker;
@@ -69,7 +78,7 @@ protected:
   std::string _motion_model_for_search;
   MotionModel _motion_model;
 
-  Info::WeakPtr _node;
+  Info::SharedPtr _node;
 };
 
 }  

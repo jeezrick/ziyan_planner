@@ -42,6 +42,10 @@ CostmapManager::CostmapManager(
 
   inflation_layer_ptr_ -> updateCosts( 
     0, 0, costmap_2d_ptr_->getSizeInCellsX(), costmap_2d_ptr_->getSizeInCellsY());
+
+  if (node_->inflation_params.save_inflated_map) {
+    costmap_2d_ptr_ -> saveMap(node_->inflation_params.save_path);
+  }
   
   resolution_ = costmap_2d_ptr_->getResolution();
   origin_x_ = costmap_2d_ptr_->getOriginX();

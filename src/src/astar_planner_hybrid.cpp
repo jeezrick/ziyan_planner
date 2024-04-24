@@ -9,6 +9,7 @@
 
 #include "pathplanner/astar_planner_hybrid.hpp"
 #include "pathplanner/logger.hpp"
+#include "pathplanner/cfg.hpp"
 
 #define BENCHMARK_TESTING
 
@@ -17,8 +18,25 @@ namespace ziyan_planner
 
 using namespace std::chrono;  // NOLINT
 
+AstarPlannerHybrid::AstarPlannerHybrid(const std::string & cfg_path) : AstarPlanner(cfg_path),
+_a_star(nullptr),
+_collision_checker(nullptr, 1),
+_smoother(nullptr),
+_costmap(nullptr),
+// _costmap_downsampler(nullptr)
+_costmap_manager(nullptr)
+{
+  _node = std::make_shared<Info>();
+  auto configMap = parseConfigFile(cfg_path);
+  readConfigFileToInfo(configMap, _node); 
+
+  ZIYAN_INFO("Read cfg done.");
+
+  init();
+}
+
 AstarPlannerHybrid::AstarPlannerHybrid(
-  const ziyan_planner::Info::WeakPtr & parent) : AstarPlanner(parent), 
+  const Info::SharedPtr & parent) : AstarPlanner(parent), 
 _a_star(nullptr),
 _collision_checker(nullptr, 1),
 _smoother(nullptr),
@@ -27,7 +45,12 @@ _costmap(nullptr),
 _costmap_manager(nullptr)
 {
   _node = parent;
-  auto node = &((parent.lock()) -> plannerhybrid_params);
+  init();
+}
+
+void AstarPlannerHybrid::init() 
+{
+  auto node = &(_node -> plannerhybrid_params);
 
   int angle_quantizations;
   bool smooth_path;
@@ -97,7 +120,7 @@ _costmap_manager(nullptr)
   // Initialize path smoother
   if (smooth_path) {
     SmootherParams params;
-    params.get(parent.lock());
+    params.get(_node);
     _smoother = std::make_unique<Smoother>(params);
     _smoother->initialize(_minimum_turning_radius_global_coords);
   }
@@ -109,12 +132,26 @@ AstarPlannerHybrid::~AstarPlannerHybrid()
 }
 
 void AstarPlannerHybrid::setMap(
+  unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+  double origin_x, double origin_y, uint8_t* data_ptr) 
+{
+  _costmap_manager = std::make_shared<CostmapManager>(
+    _node, cells_size_x, cells_size_y, resolution, origin_x, origin_y, data_ptr);
+  _setMap_core();
+}
+
+void AstarPlannerHybrid::setMap(
   std::shared_ptr<CostmapManager> costmap_manager) 
+{
+  _costmap_manager = costmap_manager;
+  _setMap_core();
+}
+
+void AstarPlannerHybrid::_setMap_core() 
 {
   ZIYAN_INFO("Configuring AstarPlannerHybrid");
 
-  _costmap = costmap_manager->getCostmapPtr();
-  _costmap_manager = costmap_manager;
+  _costmap = _costmap_manager->getCostmapPtr();
 
   _search_info.analytic_expansion_max_length =
     analytic_expansion_max_length_m / _costmap->getResolution();

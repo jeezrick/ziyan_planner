@@ -20,7 +20,8 @@ class AstarPlanner
 {
 public:
 
-  AstarPlanner(const Info::WeakPtr & parent){};
+  AstarPlanner(const Info::SharedPtr & parent){};
+  AstarPlanner(const std::string & cfg_path){};
 
   virtual ~AstarPlanner() {}
 
@@ -28,8 +29,11 @@ public:
     std::shared_ptr<CostmapManager> costmap_manager
   ) = 0;
 
-  virtual void cleanup() = 0;
+  virtual void setMap(
+  unsigned int cells_size_x, unsigned int cells_size_y, double resolution,
+  double origin_x, double origin_y, uint8_t* data_ptr) = 0;
 
+  virtual void cleanup() = 0;
 
   virtual Path createPlan(
     const PoseStamped & start,
